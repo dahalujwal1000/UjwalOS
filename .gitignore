@@ -1,0 +1,14 @@
+# Generated build inputs, images, and local test artifacts
+/build/
+/artifacts/
+/vendor/
+/out/
+__pycache__/
+*.py[cod]
+*.iso
+*.qcow2
+*.raw
+*.rpm
+# Private signing material must never be committed
+*.key
+*.pem

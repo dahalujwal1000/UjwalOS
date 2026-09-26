@@ -1,0 +1,9 @@
+{
+  "source": "https://download.opensuse.org/repositories/Virtualization:/Appliances:/SelfContained:/universal/images",
+  "observed_at": "2026-09-27",
+  "files": {
+    "Universal-Box.x86_64-Kernel.tar.xz": "29b54cb5789002973cf5d212be21b681183d6b042e672bd63b1833304e6d9f3f",
+    "Universal-Box.x86_64-System.qcow2": "d19408db723eb6014925f9bb20a94c47de354c2352b5dffa380682a12a46ae03",
+    "Universal-Box.x86_64-System.json": "cfb75c00892ffe2281d5359472961e7dd99af22229225b42b373f622bab0930d"
+  }
+}

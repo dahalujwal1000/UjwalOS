@@ -1,0 +1,17 @@
+{
+  "release": 44,
+  "architecture": "x86_64",
+  "upstream_url": "https://forge.fedoraproject.org/releng/kiwi-descriptions.git",
+  "upstream_branch": "f44",
+  "upstream_commit": "dfc49a5a10f69941179fdadd96aa6a5984f7c677",
+  "archive": "upstream/fedora-kiwi-f44.tar.gz",
+  "archive_sha256": "a1fafc1c033b11a25662cddeefe0fef9ad987897e4591cc44608b2b2f95334c4",
+  "kiwi_file": "Fedora.kiwi",
+  "profile": "KDE-Desktop-Live",
+  "type": "iso",
+  "image_name": "UjwalOS-0.1",
+  "volume_id": "UjwalOS-0.1-KDE-Live-44",
+  "application_id": "UjwalOS-0.1-KDE_Desktop-Live-44",
+  "repository_status": "Fedora 44 release and updates metalinks; moving RPM inputs, not a snapshot lock",
+  "builder_status": "SHA-256 pinned in builder.json; fail closed on remote drift; archive cached inputs for replay"
+}

@@ -1,0 +1,6 @@
+<image>
+  <!-- Fedora 44 package; pairing remains an explicit user action. -->
+  <packages type="image" profiles="KDE-Desktop-Live">
+    <package name="kde-connect"/>
+  </packages>
+</image>

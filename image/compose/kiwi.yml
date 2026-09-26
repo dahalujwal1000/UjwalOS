@@ -1,0 +1,3 @@
+# Override KIWI's HTTP OBS default for authenticated builder transport.
+obs:
+  download_url: https://download.opensuse.org/repositories

@@ -1,0 +1,3 @@
+# Builder-only configuration. Fedora's dracut-live checks implanted isomd5sum.
+iso:
+  media_tag_tool: isomd5sum
