@@ -1,0 +1,9 @@
+{
+  "KPlugin": {
+    "Id": "UjwalOS",
+    "Name": "UjwalOS Dusk",
+    "Description": "Himalayan dusk artwork for UjwalOS",
+    "License": "LicenseRef-UjwalOS-Internal"
+  },
+  "X-KDE-PlasmaImageWallpaper-AccentColor": "#19a7ad"
+}

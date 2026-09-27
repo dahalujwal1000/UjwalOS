@@ -9,7 +9,7 @@ desktop layout, and opt-in Android continuity through KDE Connect.
 |-------|-------------|--------|
 | **0 — Specification** | Architecture, image-strategy decision, security model, compatibility review, build plan | ✅ Complete |
 | **1 — Bootable v0.1** | Fedora KDE live ISO with minimal UjwalOS branding | ✅ Complete |
-| 2 — Desktop identity | Taskbar layout, theme, wallpaper, login, boot splash | ⬜ Not started |
+| 2 — Desktop identity | Taskbar layout, theme, wallpaper, login, boot splash | 🔧 In progress |
 | 3 — Gaming foundation | Steam/Proton validation, driver flow, gaming tools | ⬜ Not started |
 | 4 — Gaming Center | Qt/QML app, profiles, per-game settings | ⬜ Not started |
 | 5 — Android continuity | KDE Connect phone panel | ⬜ Not started |
@@ -36,6 +36,14 @@ that path and passed a fresh installation and disk-only boot test. See
 [docs/status.md](docs/status.md) for checksums, logs and separate test gates.
 This is an internal engineering image, not a public release. Hardware, Secure
 Boot, gaming and phone integration remain untested.
+
+### Stage 2 detail
+
+The `ujwalos-branding` RPM packages an original wallpaper, first-run Plasma
+global theme and panel template, Plasma Login Manager background, and Plymouth
+theme. A new ISO compose and VM validation are in progress. Stage 2 is complete
+only after a new account receives the defaults and an existing account keeps
+its customizations through a package update. See [current evidence](docs/status.md).
 
 ## Project documents
 

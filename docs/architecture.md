@@ -1,6 +1,7 @@
 # Architecture
 
-Status: Stage 1 implementation, 2026-09-27. See status.md for validation evidence.
+Status: Stage 1 VM acceptance passed; Stage 2 identity work in progress,
+2026-09-27. See status.md for validation evidence.
 
 ```text
 UEFI → Fedora-supported boot chain → Fedora kernel/initramfs → systemd
@@ -18,9 +19,10 @@ first-run setup instead of designing an installer. Fedora 44's KDE changes
 include Plasma Login Manager and Plasma Setup; do not assume SDDM or invent
 configuration APIs. Verify these against the pinned definition before composing.
 
-Future versioned RPMs own branding, initial Plasma layout, wallpaper, Plymouth
-assets, and integration defaults. First-login defaults must allow user changes
-to survive updates. Login branding follows a proven baseline boot/install.
+The versioned `ujwalos-branding` RPM owns the new desktop appearance and boot
+assets. First-login defaults must allow user changes to survive updates. Plasma
+Login Manager uses its supported wallpaper configuration rather than an SDDM
+theme; login validation follows a fresh image boot/install test.
 
 Future Qt 6/QML applications run as the user. Reuse KDE Connect's supported
 interfaces for local continuity. A privileged helper is deferred until a

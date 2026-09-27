@@ -1,0 +1,3 @@
+[General]
+Prepend=org.kde.dolphin.desktop;org.mozilla.firefox.desktop;org.kde.discover.desktop
+IgnoreDefaults=false

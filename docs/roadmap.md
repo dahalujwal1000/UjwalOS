@@ -18,5 +18,6 @@ separate gate evidence and remaining release limits are in status.md.
 
 Completed bounded task: build the minimal pinned Fedora 44 KDE derivative and
 pass the live boot/installer/installed-boot gate, including login and restart.
-Next implementation milestone is packaged desktop identity; custom applications
-remain deferred. Live GRUB warning diagnosis and release-limit reviews remain open.
+The current milestone is packaged desktop identity and fresh-account/update
+validation. Custom applications remain deferred. Live GRUB warning diagnosis
+and release-limit reviews remain open.

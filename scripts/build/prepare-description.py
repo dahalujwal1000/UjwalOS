@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import subprocess
 import tarfile
 import xml.etree.ElementTree as ET
 
@@ -54,9 +55,22 @@ def prepare(destination):
     script = script.replace(ending,
         "\n# Kernel RPM hooks can leave KIWI's temporary root in GRUB's BLS search path.\n"
         "if [[ \"$kiwi_profiles\" == *Live* ]]; then\n"
+        "    rpm -Uvh /image/ujwalos-branding.rpm\n"
+        "    plymouth-set-default-theme ujwalos\n"
+        "    rm /image/ujwalos-branding.rpm\n"
         "    grub2-editenv /boot/grub2/grubenv unset blsdir\n"
         "fi\n" + ending)
     config.write_text(script)
+    package_build = subprocess.run(
+        ["bash", str(ROOT / "scripts/build/build-branding-rpm.sh"), str(destination.parent)],
+        check=True, text=True, capture_output=True,
+    )
+    package = Path(package_build.stdout.splitlines()[-1])
+    if not package.is_file() or package.parent.parent.parent != destination.parent / "rpmbuild":
+        raise ValueError("Branding RPM was not built under the disposable run directory")
+    overlay = destination / "root/image"
+    overlay.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(package, overlay / "ujwalos-branding.rpm")
     shutil.copyfile(ROOT / "image/compose/packages.xml", destination / "ujwalos-packages.xml")
     # Official boxed-builder hook: copied into the disposable builder, not ISO.
     shutil.copytree(ROOT / "image/compose/boxroot", destination / "boxroot")

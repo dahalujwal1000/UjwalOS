@@ -1,0 +1,14 @@
+[Plymouth Theme]
+Name=UjwalOS
+Description=UjwalOS boot splash with an animated progress indicator
+ModuleName=two-step
+
+[two-step]
+ImageDir=/usr/share/plymouth/themes/ujwalos
+HorizontalAlignment=.5
+VerticalAlignment=.7
+BackgroundStartColor=0x081b2b
+BackgroundEndColor=0x081b2b
+ProgressBarBackgroundColor=0x234154
+ProgressBarForegroundColor=0x19a7ad
+MessageBelowAnimation=true

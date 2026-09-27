@@ -8,11 +8,13 @@ changes are described in [image/README.md](../image/README.md) and
 profile `KDE-Desktop-Live`, source commit
 `dfc49a5a10f69941179fdadd96aa6a5984f7c677`.
 
-The first derivative changes image/media names and explicitly includes
-`kde-connect`. Desktop wallpaper, installed Fedora identity, installer,
-first-run setup and boot templates stay upstream. The generated build script
-clears a temporary GRUB BLS path as described below. This is an internal
-engineering ISO; branding/trademark review is still required before publication.
+Stage 1 changes image/media names and explicitly includes `kde-connect`.
+Stage 2 adds a separately versioned `ujwalos-branding` RPM with a wallpaper,
+first-run Plasma defaults, login background and Plymouth theme. Installed Fedora
+identity, installer, first-run setup and boot templates remain upstream. The
+generated build script clears a temporary GRUB BLS path as described below.
+This is an internal engineering ISO; branding/trademark review is still required
+before publication.
 
 ## Dependencies
 
@@ -20,14 +22,15 @@ The inspected upstream README lists `kiwi`, `kiwi-systemdeps` and
 `distribution-gpg-keys`. Upstream CI additionally lists `git-core`,
 `kiwi-systemdeps-containers`, `kiwi-systemdeps-disk-images`, and `libselinux-utils`.
 The UjwalOS wrapper requires the installed KIWI 11 CLI and boxed plugin,
-Python 3.12+ (tar extraction filters), Bash, coreutils, util-linux (`flock`),
+Python 3.12+ (tar extraction filters), RPM build tools (`rpmbuild`), Bash,
+coreutils, util-linux (`flock`),
 curl, RPM, tar, xz and QEMU. The VM tester also needs xorriso and edk2-ovmf.
 
 For a **dedicated Fedora 44 development machine**, after authorizing package
 installation there, the provisioning command is:
 
 ```sh
-sudo dnf install kiwi-cli kiwi-systemdeps kiwi-boxed-plugin distribution-gpg-keys \
+sudo dnf install kiwi-cli kiwi-systemdeps kiwi-boxed-plugin distribution-gpg-keys rpm-build \
   git-core libselinux-utils python3 bash coreutils util-linux curl rpm tar xz \
   qemu-system-x86 qemu-img qemu-ui-gtk edk2-ovmf xorriso
 ```
@@ -109,6 +112,13 @@ The generated description materializes the upstream repository alias because
 mapped 9p sharing does not reliably expose host symlinks. The supported `boxroot`
 hook installs a builder-only KIWI drop-in selecting `isomd5sum`; this preserves
 Fedora's live media check rather than disabling it.
+The normal-user wrapper builds `ujwalos-branding` with `rpmbuild` under the
+fresh `out/build-*/rpmbuild/` directory. KIWI copies the unsigned RPM into its
+disposable image root; the generated live `config.sh` installs it inside that
+root and selects its Plymouth theme before the image is packed. This does not
+install packages on the host. The theme, login and desktop defaults are owned
+by the RPM. New Plasma users read the packaged global theme; existing users'
+settings remain in their own home directories.
 The generated x86-64 LiveInstall description changes the inherited
 `-Efragments -C 1048576` EROFS creation options to `-C 1048576`.
 The previous builder's `mkfs.erofs 1.9.4`

@@ -1,5 +1,41 @@
 # Status and unreleased notes
 
+## 2026-09-27 - Stage 2 desktop identity in progress
+
+The `ujwalos-branding` 0.2 noarch RPM now contains an original Himalayan dusk
+wallpaper, a Plasma global theme with first-run panel, launcher favorites and wallpaper layout,
+Plasma Login Manager wallpaper configuration, and a Plymouth two-step theme
+with original indicator frames. The package installs only system files; no
+home directory files or recurring preference-reset scripts are included.
+The generated live `config.sh` installs it into the disposable image root and
+selects the Plymouth theme. The image still uses Fedora KDE and RPM updates.
+
+| Gate | Current evidence |
+| --- | --- |
+| Package code written | PASS: `packaging/ujwalos-branding.spec`, `branding/root/` |
+| RPM built | PASS: generated per build under `out/build-*/rpmbuild/RPMS/noarch/` |
+| KIWI description validated | PASS: `scripts/build/build-iso.sh --validate`, `out/build-vBjToPyd/` |
+| Stage 2 ISO built | Revision 0.2-1 preview compose running in `out/build-Axnn4fY0/`; result not yet known. Source is now 0.2-2. |
+| Stage 2 live boot / install / login | Not yet tested |
+| New-account defaults / existing-account update | Not yet tested |
+| Hardware | Not tested |
+
+`python3 -m unittest discover -s tests/config -v`: 5 tests pass, including RPM
+file inventory and the generated image script. The earlier first attempt failed
+because `rpmbuild` chose sandboxed `/var/tmp`; `build-branding-rpm.sh` now
+directs all RPM temporary files into its fresh output directory. No host
+packages or boot settings were changed.
+
+Upstream sources checked 2026-09-27: [KDE Plasma first-run scripting](https://develop.kde.org/docs/plasma/scripting/),
+[KDE global themes](https://develop.kde.org/docs/plasma/theme/theme-porting-to-plasma6/),
+[KDE KConfig cascading defaults](https://develop.kde.org/docs/administration/kiosk/introduction/),
+[Plasma Login Manager configuration](https://github.com/KDE/plasma-login-manager#configuration),
+[KDE menu defaults](https://develop.kde.org/docs/administration/menu/),
+[KIWI overlay behavior](https://osinside.github.io/kiwi/overview/workflow.html),
+and the pinned Fedora 44 image's existing theme and login defaults. The
+`LicenseRef-UjwalOS-Internal` placeholder needs an owner licensing decision
+before redistribution; see `LICENSES/README.md`.
+
 ## 2026-09-27 - Successful compose and installation debugging
 
 Stage 1 VM acceptance passed. This is not a release or hardware certification.

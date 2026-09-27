@@ -15,7 +15,7 @@ fi
 # The upstream boxed plugin constructs a shell command internally: reject shell
 # metacharacters in every path it receives, even though our calls use arrays.
 [[ $ROOT =~ ^/[a-zA-Z0-9_./-]+$ ]] || die "Repository path must contain only letters, digits, /, _, . and - (boxed plugin limitation)"
-for tool in python3 kiwi-ng sha256sum flock tee; do command -v "$tool" >/dev/null || die "Missing tool: $tool"; done
+for tool in python3 kiwi-ng rpmbuild sha256sum flock tee; do command -v "$tool" >/dev/null || die "Missing tool: $tool"; done
 [[ $(uname -m) == x86_64 ]] || die "An x86-64 builder host is required"
 source /etc/os-release
 [[ $ID == fedora && $VERSION_ID == 44 ]] || die "This entry point is validated for Fedora 44 hosts only"

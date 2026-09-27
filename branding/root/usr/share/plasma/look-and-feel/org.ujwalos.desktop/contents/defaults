@@ -1,0 +1,17 @@
+[kdeglobals][KDE]
+widgetStyle=Breeze
+
+[kdeglobals][General]
+ColorScheme=BreezeDark
+
+[kdeglobals][Icons]
+Theme=breeze-dark
+
+[plasmarc][Theme]
+name=breeze-dark
+
+[Wallpaper]
+Image=UjwalOS
+
+[ksplashrc][KSplash]
+Theme=org.kde.breeze.desktop

@@ -1,0 +1,10 @@
+{
+  "KPackageStructure": "Plasma/LookAndFeel",
+  "KPlugin": {
+    "Id": "org.ujwalos.desktop",
+    "Name": "UjwalOS",
+    "Description": "UjwalOS desktop defaults",
+    "Version": "0.2",
+    "License": "LicenseRef-UjwalOS-Internal"
+  }
+}

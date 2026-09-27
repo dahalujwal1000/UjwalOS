@@ -3,6 +3,10 @@
 No project-wide license has been selected by the owner yet. Repository setup
 does not grant redistribution rights to third-party software or trademarks.
 Choose a license for original code, documentation, and artwork before release.
+The Stage 2 branding RPM currently uses `LicenseRef-UjwalOS-Internal` as an
+internal placeholder; it is not a grant of redistribution rights. The original
+wallpaper was generated for this project with the built-in image generation tool
+on 2026-09-27. Decide and document its distribution terms before publication.
 
 Keep Fedora and upstream package licenses and corresponding source obligations.
 Before publication, inventory every RPM and bundled asset, record its license,

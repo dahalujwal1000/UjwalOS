@@ -48,10 +48,22 @@ class ImageTests(unittest.TestCase):
                 "\nexit 0\n",
                 "\n# Kernel RPM hooks can leave KIWI's temporary root in GRUB's BLS search path.\n"
                 'if [[ "$kiwi_profiles" == *Live* ]]; then\n'
+                '    rpm -Uvh /image/ujwalos-branding.rpm\n'
+                '    plymouth-set-default-theme ujwalos\n'
+                '    rm /image/ujwalos-branding.rpm\n'
                 '    grub2-editenv /boot/grub2/grubenv unset blsdir\n'
                 'fi\n\nexit 0\n',
             )
             self.assertEqual((derived / "config.sh").read_text(), expected_config)
+            package = derived / "root/image/ujwalos-branding.rpm"
+            self.assertTrue(package.is_file())
+            paths = subprocess.check_output(["rpm", "-qpl", str(package)], text=True)
+            self.assertFalse(any(path.startswith(("/home/", "/root/")) for path in paths.splitlines()))
+            self.assertIn("/usr/share/wallpapers/UjwalOS/contents/images/1672x941.png", paths)
+            self.assertIn("/etc/xdg/kdeglobals", paths)
+            self.assertIn("/etc/xdg/kicker-extra-favoritesrc", paths)
+            self.assertIn("/etc/plasmalogin.conf.d/50-ujwalos-wallpaper.conf", paths)
+            self.assertIn("/usr/share/plymouth/themes/ujwalos/ujwalos.plymouth", paths)
             self.assertFalse((derived / "repositories/core.xml").is_symlink())
             self.assertEqual((derived / "repositories/core.xml").read_bytes(),
                              (derived / "repositories/core-nonrawhide.xml").read_bytes())
@@ -64,7 +76,8 @@ class ImageTests(unittest.TestCase):
             self.assertEqual(before, (derived / "config.sh").read_bytes())
 
     def test_shell_syntax(self):
-        for path in ("scripts/build/build-iso.sh", "scripts/test/test-iso.sh"):
+        for path in ("scripts/build/build-iso.sh", "scripts/build/build-branding-rpm.sh",
+                     "scripts/test/test-iso.sh"):
             subprocess.run(["bash", "-n", str(ROOT / path)], check=True)
 
     def test_missing_iso_refused(self):
