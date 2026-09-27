@@ -18,7 +18,9 @@ sha256sum fedora-kiwi-f44.tar.gz
 new directory. It changes the image name to `UjwalOS-0.1` and includes
 `compose/packages.xml`, which explicitly selects `kde-connect`. The Stage 1
 ISO retained the stock wallpaper. Stage 2 adds an original wallpaper and
-desktop defaults in the versioned `ujwalos-branding` RPM. The repository alias
+desktop defaults in the versioned `ujwalos-branding` RPM.
+Stage 3 adds the separate `ujwalos-gaming-setup` RPM with a user-invoked menu;
+it does not preinstall Steam or gaming tools. The repository alias
 symlink is materialized with identical content for mapped
 9p sharing. A `boxroot` overlay selects Fedora's `isomd5sum` media-check backend
 inside the disposable builder; it is not an installed-image change. The x86-64
@@ -26,7 +28,7 @@ live filesystem disables EROFS fragments after a builder failure, retaining
 LZMA level 6 compression and 1 MiB clusters. The
 generated `config.sh` unsets a KIWI build-path `blsdir` in GRUB's environment
 for live images; without this, Anaconda copies a path that hides installed
-kernel entries. It also installs the branding RPM into the disposable image
+kernel entries. It also installs the branding and gaming-setup RPMs into the disposable image
 root and selects its Plymouth theme. The RPM owns initial Plasma defaults,
 wallpaper and login appearance without changing installed release identity,
 installer or GRUB templates. Version 44 and release-version 44 remain

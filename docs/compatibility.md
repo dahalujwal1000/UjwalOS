@@ -11,8 +11,9 @@ Checked 2026-09-26. No supported-hardware or gaming certification is claimed.
 | Kernel, firmware, Mesa, PipeWire, Plasma | Inherit base | Exact package set, versions, licenses follow pinned KDE definition |
 | KDE Connect | First phone integration | kde-connect verified for Fedora 44 and explicitly selected; phone tests pending |
 | Qt 6 / KDE frameworks | Future UI | Resolve exact development packages when an application is scoped |
-| Steam / Proton | Optional later setup | Distribution rights, source and real game testing pending |
-| GameMode, MangoHud, Gamescope, Heroic | Optional later evaluation | Package/source/API validation pending; not selected image dependencies |
+| Steam / Proton | Optional Stage 3 setup | Source and no-bundling review recorded in gaming-setup.md; Steam and real game testing pending |
+| GameMode, MangoHud, Gamescope | Optional Stage 3 tools | Fedora 44 packages verified 2026-09-28; install completed in live VM, but GameMode governor self-test failed under emulation and real game tests remain pending |
+| Heroic | Deferred optional evaluation | Package source, API and distribution review pending |
 | NVIDIA | Optional later setup | Hybrid graphics, signed modules and Secure Boot enrollment tests pending |
 | Waydroid | Separate feature-gated experiment | Graphics, security, image rights and app compatibility unverified |
 

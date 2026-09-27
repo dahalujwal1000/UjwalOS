@@ -15,7 +15,10 @@ watermark. The login background ships as
 `/usr/lib/plasmalogin/plasmalogin.conf.d/50-ujwalos-wallpaper.conf`, the only
 drop-in directory Plasma Login Manager ranks above its packaged
 `defaults.conf`; see [branding/README.md](../branding/README.md) for the source
-evidence. Installed Fedora
+evidence.
+Stage 3 adds a separate `ujwalos-gaming-setup` RPM containing a user-invoked
+launcher and setup script. See [gaming setup](gaming-setup.md) for its opt-in
+package choices and test gate. Installed Fedora
 identity, installer, first-run setup and boot templates remain upstream. The
 generated build script clears a temporary GRUB BLS path as described below.
 This is an internal engineering ISO; branding/trademark review is still required
@@ -113,16 +116,23 @@ KVM the wrapper replaces `--cpu host` with `--no-accel --cpu max`. Software
 emulation is much slower. Do not use the older KIWI 10 `boxbuild -- ...` syntax
 with this KIWI 11 wrapper; KIWI 11 uses the `kiwi` subcommand.
 
+For a VM test on a memory-constrained host, set
+`UJWALOS_VM_MEMORY_MIB=2048` before `scripts/test/test-iso.sh`; the default is
+4096 MiB and accepted values are 2048-8192 MiB. This changes only the private
+test VM's memory allocation, not the 6 GiB ISO builder requirement.
+
 The generated description materializes the upstream repository alias because
 mapped 9p sharing does not reliably expose host symlinks. The supported `boxroot`
 hook installs a builder-only KIWI drop-in selecting `isomd5sum`; this preserves
 Fedora's live media check rather than disabling it.
-The normal-user wrapper builds `ujwalos-branding` with `rpmbuild` under the
-fresh `out/build-*/rpmbuild/` directory. KIWI copies the unsigned RPM into its
-disposable image root; the generated live `config.sh` installs it inside that
-root and selects its Plymouth theme before the image is packed. This does not
-install packages on the host. The theme, login and desktop defaults are owned
-by the RPM. New Plasma users read the packaged global theme; existing users'
+The normal-user wrapper builds `ujwalos-branding` and
+`ujwalos-gaming-setup` with `rpmbuild` under the fresh
+`out/build-*/rpmbuild/` and `out/build-*/gaming-rpmbuild/` directories.
+KIWI copies both unsigned RPMs into its disposable image root; the generated
+live `config.sh` installs them there and selects the Plymouth theme before the
+image is packed. This does not install packages on the host. The theme, login
+and desktop defaults are owned by the branding RPM. New Plasma users read the
+packaged global theme; existing users'
 settings remain in their own home directories.
 The generated x86-64 LiveInstall description changes the inherited
 `-Efragments -C 1048576` EROFS creation options to `-C 1048576`.
@@ -153,10 +163,7 @@ Use the actual path printed by the successful build:
 
 ```sh
 scripts/test/test-iso.sh out/build-XXXXXXXX/result/ACTUAL-NAME.iso --check-only
-scripts/test/test-iso.sh out/build-XXXXXXXX/result/ACTUAL-NAME.iso
-```
-
-The first command checks the selected file's SHA-256, ISO9660 signature and UEFI
+scripts/test/test-iso.sh out/build-XXXXXXXX/result/ACTUAL-NAME.iso660 signature and UEFI
 El Torito boot entry. These checks do not establish a successful boot.
 The second creates `out/vm-XXXXXXXX/`, a 40 GiB sparse QCOW2 disk and private UEFI
 variables, then opens QEMU with 4 GiB RAM. Install only to that virtual disk.

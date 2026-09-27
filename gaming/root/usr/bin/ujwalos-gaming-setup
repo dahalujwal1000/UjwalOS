@@ -1,0 +1,114 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+[[ $EUID -ne 0 ]] || { echo 'Run Gaming Setup as your normal user.' >&2; exit 1; }
+
+tools=(gamemode mangohud gamescope vulkan-tools)
+
+show_status() {
+    printf '\nInstalled gaming packages:\n'
+    for package in "${tools[@]}" steam; do
+        if rpm -q --quiet "$package"; then
+            rpm -q "$package"
+        else
+            printf '  %s: not installed\n' "$package"
+        fi
+    done
+    printf '\nGraphics:\n'
+    if command -v lspci >/dev/null; then
+        lspci -nnk | awk '
+            tolower($0) ~ /vga|3d controller|display controller/ { print; following=2; next }
+            following > 0 { print; following-- }
+        '
+    fi
+    if command -v vulkaninfo >/dev/null; then
+        vulkaninfo --summary || printf 'Vulkan diagnostic failed; check the driver and ICD.\n'
+    else
+        printf 'vulkaninfo is not installed.\n'
+    fi
+    printf '\nController device nodes:\n'
+    local found=false device
+    for device in /dev/input/js* /dev/input/by-id/*-event-joystick; do
+        if [[ -e $device ]]; then
+            printf '  %s\n' "$device"
+            found=true
+        fi
+    done
+    $found || printf '  None detected (this does not rule out other input APIs).\n'
+}
+
+show_plan() {
+    printf 'Fedora packages available as an optional set: %s\n' "${tools[*]}"
+    printf 'Steam is optional and requires a user-enabled third-party repository.\n'
+    printf 'Proton is selected and downloaded within Steam, not bundled here.\n'
+    printf 'Optional per-game Steam launch options: gamemoderun %%command%% or mangohud %%command%%.\n'
+}
+
+test_gamemode() {
+    command -v gamemoded >/dev/null || {
+        printf 'Install the Fedora gaming tools first.\n' >&2
+        return 1
+    }
+    gamemoded -t
+}
+
+install_tools() {
+    printf 'Install these Fedora packages: %s\n' "${tools[*]}"
+    printf 'DNF will show its transaction and ask for confirmation.\n'
+    pkexec /usr/bin/dnf5 install "${tools[@]}"
+}
+
+install_steam() {
+    printf 'Steam is proprietary and will be installed only from an already enabled repository.\n'
+    printf 'Review the repository and Steam terms before proceeding.\n'
+    local available
+    available=$(dnf5 repoquery --available --queryformat '%{name}' steam 2>/dev/null) || {
+        printf 'Could not query enabled repositories.\n' >&2
+        return 1
+    }
+    if ! printf '%s\n' "$available" | grep -qx steam; then
+        printf 'No Steam package is available from enabled repositories.\n'
+        printf 'See https://rpmfusion.org/Configuration for the optional RPM Fusion source.\n'
+        return 1
+    fi
+    local answer
+    read -r -p 'Install Steam from your enabled repository? Type yes: ' answer
+    [[ $answer == yes ]] || { printf 'Cancelled.\n'; return 0; }
+    pkexec /usr/bin/dnf5 install steam
+}
+
+show_help() {
+    printf 'Usage: ujwalos-gaming-setup [--status|--plan|--test-gamemode|--install-tools|--install-steam|--help]\n'
+}
+
+case ${1:-} in
+    --status) show_status ;;
+    --plan) show_plan ;;
+    --test-gamemode) test_gamemode ;;
+    --install-tools) install_tools ;;
+    --install-steam) install_steam ;;
+    --help) show_help ;;
+    '')
+        [[ -t 0 ]] || { show_help >&2; exit 2; }
+        while true; do
+            printf '\nUjwalOS Gaming Setup\n'
+            printf '1) Check graphics, controller and package status\n'
+            printf '2) Install Fedora gaming tools\n'
+            printf '3) Install Steam from an enabled repository\n'
+            printf '4) Show setup plan\n'
+            printf '5) Test GameMode\n'
+            printf '0) Exit\n'
+            read -r -p 'Select: ' choice || exit 0
+            case $choice in
+                1) show_status ;;
+                2) install_tools || printf 'Installation did not complete.\n' ;;
+                3) install_steam || printf 'Steam installation did not complete.\n' ;;
+                4) show_plan ;;
+                5) test_gamemode || printf 'GameMode test failed.\n' ;;
+                0) exit 0 ;;
+                *) printf 'Choose 0 through 5.\n' ;;
+            esac
+        done
+        ;;
+    *) show_help >&2; exit 2 ;;
+esac

@@ -1,5 +1,85 @@
 # Status and unreleased notes
 
+## 2026-09-28 - Stage 3 gaming foundation in progress
+
+The new `ujwalos-gaming-setup` 0.1-1 RPM packages a user-run terminal setup
+wizard and KDE application launcher. It offers an explicit PolicyKit-authorized
+DNF5 transaction for Fedora's `gamemode`, `mangohud`, `gamescope` and
+`vulkan-tools`; a separate Steam transaction is available only from an already
+enabled repository after another explicit confirmation. The wizard reports
+graphics, Vulkan and joystick-device status. It does not bundle games, Steam,
+Proton or proprietary drivers, alter user preferences, or enable repositories.
+The source and redistribution boundary is documented in
+[gaming-setup.md](gaming-setup.md).
+
+| Gate | Current evidence |
+| --- | --- |
+| Setup code and RPM | PASS: `scripts/build/build-gaming-rpm.sh out/stage3-gaming-check` built `ujwalos-gaming-setup-0.1-1.fc44.noarch.rpm`; `prepare-description.py` adds it only to the KDE live profile |
+| KIWI description validation | PASS: `scripts/build/build-iso.sh --validate`, `out/build-EFhgGr52/description-validation.log` |
+| Repository tests | PASS: `python3 -m unittest discover -s tests/config -v`, 7 tests including fixed install command, explicit Steam confirmation and VM memory bounds |
+| Stage 3 ISO | PASS: `out/build-dXo1VHow/result/UjwalOS-0.1.x86_64-44-0.iso`, wrapper and guest exit 0, gaming RPM in manifest, media integrity passed |
+| Candidate RPM in installed VM | PASS: installed in existing Stage 2 Fedora KDE VM `out/vm-St43Uqg6`; plan/status worked and absent Steam/GameMode paths failed without installing anything |
+| Stage 3 live boot and setup | PASS: `out/vm-ck8RbgAm` reached Plasma; KDE launcher opened wizard; optional Fedora tools transaction completed in live VM |
+| Stage 3 fresh install and disk-only boot | Not tested yet |
+| Steam/Proton and game matrix | Not tested; stock Fedora KDE baseline still required |
+| Physical graphics and controller tests | Not tested |
+
+Read-only host inventory on 2026-09-28 showed Intel Raptor Lake-P UHD
+graphics and an NVIDIA RTX 3050 6GB laptop GPU. `rpm -q` found GameMode
+1.8.2-4.fc44 installed on the host, but no Steam, MangoHud, Gamescope or
+Vulkan tools; no joystick device node was present. No host packages were
+installed or changed by this work. This inventory is not a hardware validation
+result for the UjwalOS image.
+
+`gaming/root/usr/bin/ujwalos-gaming-setup --status` ran as an unprivileged
+user and reported the same package/GPU inventory and no joystick nodes.
+`desktop-file-validate gaming/root/usr/share/applications/ujwalos-gaming-setup.desktop`
+exited 0. `rpm -qplv` showed only the executable setup script and one launcher;
+`rpm -qp --scripts` showed no scriptlets. The candidate RPM SHA-256 is
+`3848b4f3460c8ee23d4de85ece9fd7835bf3599c8830459f978cc3c4c3d5a760`.
+The package was included in the validated KIWI description. At the failed
+compose check, `/proc/meminfo` reported about 3.8 GiB available and the wrapper
+required 7 GiB for its 6 GiB builder. This was a host resource gate; the builder
+VM did not launch. After shutting down the test VM, available memory rose to
+about 7.8 GiB and the fresh compose completed. No host packages were changed.
+
+`scripts/build/build-iso.sh` accepted `out/build-dXo1VHow` with wrapper
+`exit-code` 0 and guest `result/result.code` 0. Its ISO is
+`result/UjwalOS-0.1.x86_64-44-0.iso` (3,791,642,624 bytes; SHA-256
+`b4110546036fdb87813dc35de25d447cc5e2032821278fa0ed28a1795a71855c`).
+The package manifest lists `ujwalos-gaming-setup|0.1|1.fc44|noarch` and
+`ujwalos-branding|0.4|1.fc44|noarch`.
+`scripts/test/test-iso.sh out/build-dXo1VHow/result/UjwalOS-0.1.x86_64-44-0.iso
+--check-only` passed SHA-256, ISO9660 and UEFI catalog checks. The first live
+QEMU launch hit a sandbox Unix-socket bind denial; the second launch, under the
+approved VM permission, booted the same ISO in `out/vm-ck8RbgAm`.
+
+The live VM reached the branded Plasma desktop (`stage3-desktop.png`), the KDE
+launcher found "UjwalOS Gaming Setup" (`stage3-launcher.png`), and clicking it
+opened the interactive wizard in Konsole (`stage3-wizard.png`). Choice 2 invoked
+PolicyKit/DNF5. DNF showed a 10-package transaction and waited for confirmation
+(`stage3-tools-transaction.png`). After confirmation, it installed `gamemode`,
+`mangohud` and `gamescope` with dependencies; `vulkan-tools` was already
+installed. DNF reported `Complete!` and the wizard returned to its menu
+(`stage3-tools-result.png`). Choice 5 ran `gamemoded -t`: basic checks passed,
+but its CPU-governor feature check failed because the software-emulated VM has
+no CPU governor files (`stage3-gamemode.png`). This is not a GameMode validation
+pass on physical hardware. The VM was cleanly shut down. No game was launched,
+and this live-boot test is not a fresh installation test.
+
+The existing Stage 2 installed Fedora KDE VM was booted with
+`UJWALOS_VM_MEMORY_MIB=2048 scripts/test/test-iso.sh --installed
+out/vm-St43Uqg6 --headless`. `sudo rpm -Uvh /tmp/ujwalos-gaming-setup.rpm`
+installed the candidate RPM successfully (`stage3-install-result.png`).
+`rpm -q ujwalos-gaming-setup` and `ujwalos-gaming-setup --plan` completed;
+`--status` found software Vulkan rendering through llvmpipe and a virtual
+joystick node (`stage3-status.png`). `--install-steam` found no `steam` package
+in enabled repositories and exited 1 without adding a repository or package;
+`--test-gamemode` reported the optional tools absent and exited 1
+(`stage3-optional2.png`). The VM was cleanly powered off. This verifies the
+candidate RPM on an installed guest, not its inclusion in a new ISO, a Steam
+transaction, physical GPU acceleration or real controller input.
+
 ## 2026-09-28 - Stage 2 desktop identity complete
 
 The `ujwalos-branding` 0.4-1 noarch RPM contains an original Himalayan dusk

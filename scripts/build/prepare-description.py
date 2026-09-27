@@ -56,8 +56,10 @@ def prepare(destination):
         "\n# Kernel RPM hooks can leave KIWI's temporary root in GRUB's BLS search path.\n"
         "if [[ \"$kiwi_profiles\" == *KDE-Desktop-Live* ]]; then\n"
         "    rpm -Uvh /image/ujwalos-branding.rpm\n"
+        "    rpm -Uvh /image/ujwalos-gaming-setup.rpm\n"
         "    plymouth-set-default-theme ujwalos\n"
         "    rm /image/ujwalos-branding.rpm\n"
+        "    rm /image/ujwalos-gaming-setup.rpm\n"
         "fi\n"
         "if [[ \"$kiwi_profiles\" == *Live* ]]; then\n"
         "    grub2-editenv /boot/grub2/grubenv unset blsdir\n"
@@ -73,6 +75,14 @@ def prepare(destination):
     overlay = destination / "root/image"
     overlay.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(package, overlay / "ujwalos-branding.rpm")
+    gaming_build = subprocess.run(
+        ["bash", str(ROOT / "scripts/build/build-gaming-rpm.sh"), str(destination.parent)],
+        check=True, text=True, capture_output=True,
+    )
+    gaming_package = Path(gaming_build.stdout.splitlines()[-1])
+    if not gaming_package.is_file() or gaming_package.parent.parent.parent != destination.parent / "gaming-rpmbuild":
+        raise ValueError("Gaming RPM was not built under the disposable run directory")
+    shutil.copyfile(gaming_package, overlay / "ujwalos-gaming-setup.rpm")
     shutil.copyfile(ROOT / "image/compose/packages.xml", destination / "ujwalos-packages.xml")
     # Official boxed-builder hook: copied into the disposable builder, not ISO.
     shutil.copytree(ROOT / "image/compose/boxroot", destination / "boxroot")

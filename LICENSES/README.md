@@ -18,6 +18,11 @@ channels, and Android images require separate source/license review before any
 optional installer is implemented. Do not bundle them in the initial base image.
 This is a review policy, not a completed legal clearance.
 
+The Stage 3 Steam choice uses only a repository already enabled by the user;
+its source, no-bundling boundary and Valve terms are reviewed in
+[gaming-setup.md](../docs/gaming-setup.md). No Steam or Proton binaries are
+redistributed in the ISO. NVIDIA and Heroic installers remain unimplemented.
+
 The vendored Fedora KIWI archive under `image/upstream/` is GPL-3.0-or-later;
 its complete source, upstream attribution, and COPYING are retained. The absence
 of a project-wide license does not replace that upstream license.

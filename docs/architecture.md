@@ -1,7 +1,7 @@
 # Architecture
 
-Status: Stage 1 VM acceptance passed; Stage 2 identity work in progress,
-2026-09-27. See status.md for validation evidence.
+Status: Stages 1 and 2 VM acceptance passed; Stage 3 gaming foundation in
+progress, 2026-09-28. See status.md for validation evidence.
 
 ```text
 UEFI → Fedora-supported boot chain → Fedora kernel/initramfs → systemd

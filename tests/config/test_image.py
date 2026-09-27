@@ -49,8 +49,10 @@ class ImageTests(unittest.TestCase):
                 "\n# Kernel RPM hooks can leave KIWI's temporary root in GRUB's BLS search path.\n"
                 'if [[ "$kiwi_profiles" == *KDE-Desktop-Live* ]]; then\n'
                 '    rpm -Uvh /image/ujwalos-branding.rpm\n'
+                '    rpm -Uvh /image/ujwalos-gaming-setup.rpm\n'
                 '    plymouth-set-default-theme ujwalos\n'
                 '    rm /image/ujwalos-branding.rpm\n'
+                '    rm /image/ujwalos-gaming-setup.rpm\n'
                 'fi\n'
                 'if [[ "$kiwi_profiles" == *Live* ]]; then\n'
                 '    grub2-editenv /boot/grub2/grubenv unset blsdir\n'
@@ -88,6 +90,16 @@ class ImageTests(unittest.TestCase):
                 self.assertIn(f"/usr/share/plymouth/themes/ujwalos/{sprite}", paths)
                 self.assertTrue((ROOT / "branding/root/usr/share/plymouth/themes/ujwalos" / sprite)
                                 .read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
+            gaming = derived / "root/image/ujwalos-gaming-setup.rpm"
+            self.assertTrue(gaming.is_file())
+            self.assertEqual(subprocess.check_output(["rpm", "-qp", "--scripts", str(gaming)],
+                                                     text=True), "")
+            gaming_paths = subprocess.check_output(["rpm", "-qpl", str(gaming)], text=True)
+            self.assertEqual(set(gaming_paths.splitlines()), {
+                "/usr/bin/ujwalos-gaming-setup",
+                "/usr/share/applications/ujwalos-gaming-setup.desktop",
+            })
+            self.assertNotIn("/home/", gaming_paths)
             self.assertFalse((derived / "repositories/core.xml").is_symlink())
             self.assertEqual((derived / "repositories/core.xml").read_bytes(),
                              (derived / "repositories/core-nonrawhide.xml").read_bytes())
@@ -101,9 +113,49 @@ class ImageTests(unittest.TestCase):
 
     def test_shell_syntax(self):
         for path in ("scripts/build/build-iso.sh", "scripts/build/build-branding-rpm.sh",
+                     "scripts/build/build-gaming-rpm.sh", "gaming/root/usr/bin/ujwalos-gaming-setup",
                      "scripts/build/generate-plymouth-prompts.sh",
                      "scripts/test/test-iso.sh"):
             subprocess.run(["bash", "-n", str(ROOT / path)], check=True)
+
+    def test_gaming_setup_requires_explicit_actions(self):
+        script = ROOT / "gaming/root/usr/bin/ujwalos-gaming-setup"
+        plan = subprocess.run([str(script), "--plan"], check=True, text=True,
+                              capture_output=True)
+        self.assertIn("gamemode mangohud gamescope vulkan-tools", plan.stdout)
+        self.assertIn("not bundled", plan.stdout)
+        with tempfile.TemporaryDirectory() as tmp:
+            fake_bin = Path(tmp)
+            pkexec = fake_bin / "pkexec"
+            pkexec.write_text('#!/bin/sh\nprintf "PKEXEC %s\\n" "$*"\n')
+            pkexec.chmod(0o755)
+            dnf5 = fake_bin / "dnf5"
+            dnf5.write_text('#!/bin/sh\nprintf "steam\\n"\n')
+            dnf5.chmod(0o755)
+            gamemoded = fake_bin / "gamemoded"
+            gamemoded.write_text('#!/bin/sh\nprintf "GAMEMODE %s\\n" "$*"\n')
+            gamemoded.chmod(0o755)
+            env = os.environ.copy()
+            env["PATH"] = str(fake_bin) + os.pathsep + env["PATH"]
+            tools = subprocess.run([str(script), "--install-tools"], check=True,
+                                   text=True, capture_output=True, env=env)
+            self.assertIn("PKEXEC /usr/bin/dnf5 install gamemode mangohud gamescope vulkan-tools",
+                          tools.stdout)
+            declined = subprocess.run([str(script), "--install-steam"], input="no\n",
+                                      check=True, text=True, capture_output=True, env=env)
+            self.assertNotIn("PKEXEC", declined.stdout)
+            accepted = subprocess.run([str(script), "--install-steam"], input="yes\n",
+                                      check=True, text=True, capture_output=True, env=env)
+            self.assertIn("PKEXEC /usr/bin/dnf5 install steam", accepted.stdout)
+            dnf5.write_text('#!/bin/sh\nexit 0\n')
+            unavailable = subprocess.run([str(script), "--install-steam"], input="yes\n",
+                                         text=True, capture_output=True, env=env)
+            self.assertNotEqual(unavailable.returncode, 0)
+            self.assertIn("No Steam package is available", unavailable.stdout)
+            self.assertNotIn("PKEXEC", unavailable.stdout)
+            check = subprocess.run([str(script), "--test-gamemode"], check=True,
+                                   text=True, capture_output=True, env=env)
+            self.assertIn("GAMEMODE -t", check.stdout)
 
     def test_missing_iso_refused(self):
         result = subprocess.run([str(ROOT / "scripts/test/test-iso.sh"),
@@ -111,6 +163,15 @@ class ImageTests(unittest.TestCase):
                                 text=True, capture_output=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("ISO must be an existing regular file", result.stderr)
+
+    def test_invalid_vm_memory_refused(self):
+        env = os.environ.copy()
+        env["UJWALOS_VM_MEMORY_MIB"] = "0"
+        result = subprocess.run([str(ROOT / "scripts/test/test-iso.sh"),
+                                 "/definitely-missing-ujwalos.iso", "--check-only"],
+                                text=True, capture_output=True, env=env)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("must be between 2048 and 8192", result.stderr)
 
     def test_checksum_mismatch_refused(self):
         with tempfile.TemporaryDirectory() as tmp:

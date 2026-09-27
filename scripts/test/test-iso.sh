@@ -7,10 +7,14 @@ usage() {
     echo 'Usage: test-iso.sh ISO [--check-only|--headless]'
     echo '       test-iso.sh --installed out/vm-XXXXXXXX [--headless]'
     echo 'Headless uses a local Unix VNC socket; see docs/build-and-test.md.'
+    echo 'UJWALOS_VM_MEMORY_MIB overrides the 4096 MiB default (2048-8192).'
 }
 [[ $# -ge 1 ]] || { usage; exit 1; }
 [[ $1 != --help ]] || { usage; exit 0; }
 [[ $EUID -ne 0 ]] || die "Run QEMU as a normal user"
+memory_mib=${UJWALOS_VM_MEMORY_MIB:-4096}
+[[ $memory_mib =~ ^[0-9]+$ ]] && ((memory_mib >= 2048 && memory_mib <= 8192)) || \
+    die "UJWALOS_VM_MEMORY_MIB must be between 2048 and 8192"
 for tool in python3 qemu-system-x86_64 qemu-img xorriso; do command -v "$tool" >/dev/null || die "Missing: $tool"; done
 installed=false
 if [[ $1 == --installed ]]; then
@@ -75,7 +79,7 @@ fi
 media=()
 if ! $installed; then media=(-drive "file=$iso,media=cdrom,format=raw,readonly=on" -boot order=d); fi
 cmd=(qemu-system-x86_64 -name UjwalOS-v0.1-test -machine q35 "${accel[@]}"
-     -m 4096 -smp 2 -device virtio-vga -device qemu-xhci -device usb-tablet
+     -m "$memory_mib" -smp 2 -device virtio-vga -device qemu-xhci -device usb-tablet
      -drive "if=pflash,format=raw,readonly=on,file=$firmware"
      -drive "if=pflash,format=raw,file=$vm/OVMF_VARS.fd"
      -drive "file=$vm/disk.qcow2,format=qcow2,if=virtio"

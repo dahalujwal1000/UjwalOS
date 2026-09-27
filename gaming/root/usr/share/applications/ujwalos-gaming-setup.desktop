@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=UjwalOS Gaming Setup
+Comment=Optional game tools and diagnostics
+Exec=konsole -e /usr/bin/ujwalos-gaming-setup
+Icon=applications-games
+Categories=Game;
+Terminal=false

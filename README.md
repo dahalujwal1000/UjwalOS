@@ -10,7 +10,7 @@ desktop layout, and opt-in Android continuity through KDE Connect.
 | **0 — Specification** | Architecture, image-strategy decision, security model, compatibility review, build plan | ✅ Complete |
 | **1 — Bootable v0.1** | Fedora KDE live ISO with minimal UjwalOS branding | ✅ Complete |
 | **2 — Desktop identity** | Taskbar layout, theme, wallpaper, login, boot splash | ✅ Complete |
-| 3 — Gaming foundation | Steam/Proton validation, driver flow, gaming tools | ⬜ Not started |
+| 3 — Gaming foundation | Optional setup, Steam/Proton, drivers, controllers and game matrix | 🔧 In progress |
 | 4 — Gaming Center | Qt/QML app, profiles, per-game settings | ⬜ Not started |
 | 5 — Android continuity | KDE Connect phone panel | ⬜ Not started |
 | 6 — Android apps | Optional Waydroid experiment | ⬜ Not started |
@@ -54,6 +54,18 @@ It passed the compose result, checksum, ISO9660, UEFI catalog and live Plasma
 boot gates. This remains an internal engineering image: hardware, Secure Boot,
 gaming, phone integration and public-release licensing are not Stage 2 claims.
 See [current evidence](docs/status.md).
+
+### Stage 3 detail
+
+The optional Gaming Setup RPM and KDE launcher are included in the Stage 3
+engineering ISO at `out/build-dXo1VHow/result/UjwalOS-0.1.x86_64-44-0.iso`
+(SHA-256 `b4110546036fdb87813dc35de25d447cc5e2032821278fa0ed28a1795a71855c`).
+The ISO passed media checks and reached Plasma in a VM; the launcher opened
+and installed Fedora gaming tools in that disposable live session. Steam,
+Proton and proprietary drivers are not bundled. Stage 3 is **not complete**:
+the stock Fedora KDE game matrix, Steam/Proton, real GPU and controller tests
+remain open. See the [test protocol](docs/gaming-setup.md) and
+[gate evidence](docs/status.md).
 
 ## Project documents
 
