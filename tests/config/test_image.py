@@ -66,7 +66,22 @@ class ImageTests(unittest.TestCase):
             self.assertIn("/usr/share/wallpapers/UjwalOS/contents/images/1672x941.png", paths)
             self.assertIn("/etc/xdg/kdeglobals", paths)
             self.assertIn("/etc/xdg/kicker-extra-favoritesrc", paths)
-            self.assertIn("/etc/plasmalogin.conf.d/50-ujwalos-wallpaper.conf", paths)
+            # plasma-login-manager ranks /usr/lib/plasmalogin/plasmalogin.conf.d above its own
+            # packaged defaults.conf, and /etc/plasmalogin.conf.d below it, so the admin-facing
+            # directory would be shadowed by the distribution wallpaper.
+            self.assertIn("/usr/lib/plasmalogin/plasmalogin.conf.d/50-ujwalos-wallpaper.conf", paths)
+            self.assertNotIn("/etc/plasmalogin.conf.d/50-ujwalos-wallpaper.conf", paths)
+            greeter = subprocess.check_output(
+                ["rpm", "-qp", "--qf", "[%{FILEDIGESTS} %{FILENAMES}\n]", str(package)], text=True)
+            digest = next(line.split()[0] for line in greeter.splitlines()
+                          if line.split(maxsplit=1)[1] == "/usr/lib/plasmalogin/plasmalogin.conf.d/50-ujwalos-wallpaper.conf")
+            greeter_conf = (ROOT / "branding/root/usr/lib/plasmalogin/plasmalogin.conf.d"
+                            "/50-ujwalos-wallpaper.conf").read_bytes()
+            self.assertEqual(hashlib.sha256(greeter_conf).hexdigest(), digest)
+            # WallpaperPluginId is the key plasma-login-manager reads; WallpaperPlugin is ignored.
+            self.assertIn("WallpaperPluginId=org.kde.image", greeter_conf.decode())
+            self.assertNotIn("\nWallpaperPlugin=", greeter_conf.decode())
+            self.assertIn("Image=file:///usr/share/wallpapers/UjwalOS/", greeter_conf.decode())
             self.assertIn("/usr/share/plymouth/themes/ujwalos/ujwalos.plymouth", paths)
             self.assertIn("/usr/share/plymouth/themes/ujwalos/watermark.png", paths)
             self.assertFalse((derived / "repositories/core.xml").is_symlink())

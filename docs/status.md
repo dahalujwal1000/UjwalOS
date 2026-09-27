@@ -2,7 +2,7 @@
 
 ## 2026-09-27 - Stage 2 desktop identity in progress
 
-The `ujwalos-branding` 0.2-2 noarch RPM contains an original Himalayan dusk
+The `ujwalos-branding` 0.3-1 noarch RPM contains an original Himalayan dusk
 wallpaper, a Plasma global theme with first-run panel, launcher favorites and wallpaper layout,
 Plasma Login Manager wallpaper configuration, and a Plymouth two-step theme
 with original indicator frames and a wordmark watermark. The package installs
@@ -14,13 +14,45 @@ applies to every live profile. The image still uses Fedora KDE and RPM updates.
 
 | Gate | Current evidence |
 | --- | --- |
-| Package code written | PASS: `packaging/ujwalos-branding.spec` 0.2-2, `branding/root/` |
-| RPM built | PASS: generated per build under `out/build-*/rpmbuild/RPMS/noarch/` |
+| Package code written | PASS: `packaging/ujwalos-branding.spec` 0.3-1, `branding/root/` |
+| RPM built | PASS: `out/build-8bD6L764/rpmbuild/RPMS/noarch/ujwalos-branding-0.3-1.fc44.noarch.rpm`, built by `prepare-description.py` inside the run directory |
 | KIWI description validated | PASS: `scripts/build/build-iso.sh --validate`, `out/build-vBjToPyd/` and `out/build-AkFFkfM2/` |
-| Stage 2 ISO built | Revision 0.2-1 compose finished in `out/build-Axnn4fY0/`: guest `result.code` 0 and a 3,625,525,248-byte ISO, SHA-256 `ea6307c661abd5cf626db81e5a1e6a26df2c9676aeb9264f57d11280871078ec`. The wrapper then aborted and wrote no `SHA256SUMS`, so no wrapper-level build acceptance exists and that ISO predates 0.2-2. No compose has been run for 0.2-2. |
-| Stage 2 live boot / install / login | Not yet tested |
-| New-account defaults / existing-account update | Not yet tested |
+| Stage 2 ISO built | PASS: `out/build-8bD6L764/`, wrapper and guest exit 0, `SHA256SUMS` and `iso-path.txt` present. 3,791,599,616-byte ISO, SHA-256 `18f1b66d3579d25b43cea4c9437885979c7a7b8860310b94848f22ad4b1417da`. Manifest lists `ujwalos-branding 0.3-1.fc44`. |
+| Stage 2 live boot | PASS: `out/vm-St43Uqg6` booted the 0.3-1 ISO, showed the desktop defaults and launched Anaconda. |
+| Stage 2 install / installed login | PASS: Anaconda reported successful installation; the same VM booted its private disk with the ISO detached, completed first-run setup, and reached a branded login and Plasma desktop. |
+| New-account defaults / existing-account update | New-account wallpaper and bottom panel PASS in `out/vm-St43Uqg6`; existing-account customization survival through RPM update not yet tested. |
 | Hardware | Not tested |
+
+The fresh-account half of the Stage 2 gate passed. Package update preservation
+and the installed Plymouth selection remain open.
+
+### Corrected 0.3-1 image and installation
+
+`scripts/build/build-iso.sh` accepted `out/build-8bD6L764` with wrapper
+`exit-code` 0 and guest `result/result.code` 0. The ISO is
+`result/UjwalOS-0.1.x86_64-44-0.iso` (3,791,599,616 bytes, SHA-256
+`18f1b66d3579d25b43cea4c9437885979c7a7b8860310b94848f22ad4b1417da`).
+The package manifest lists `ujwalos-branding|0.3|1.fc44|noarch`. On 2026-09-27,
+`scripts/test/test-iso.sh out/build-8bD6L764/result/UjwalOS-0.1.x86_64-44-0.iso --check-only`
+passed SHA-256, ISO9660 and UEFI catalog checks. `python3 -m unittest discover
+-s tests/config -v` passed all 5 tests; `bash -n
+scripts/build/build-iso.sh scripts/build/build-branding-rpm.sh
+scripts/test/test-iso.sh` and `git diff --check` exited 0.
+
+`out/vm-St43Uqg6` booted that ISO and Anaconda showed "Successfully installed"
+(`current.png`). `scripts/test/test-iso.sh --installed out/vm-St43Uqg6 --headless`
+then booted its 40 GiB file-backed disk without the ISO. Fedora first-run setup
+created `stg2test`; the login screen displayed the packaged UjwalOS wallpaper
+(`login.png`), and the new account's first desktop displayed that wallpaper and
+the bottom panel (`desktop.png`). `rpm -q ujwalos-branding` inside the account
+reported `ujwalos-branding-0.3-1.fc44.noarch` (`rpm-before.png`). The live
+session was terminated after Anaconda completion to detach the ISO. No host
+disk or boot setting was changed.
+
+The generated live initrd contains the UjwalOS Plymouth theme and selects it;
+the installed system's splash selection has not been proven, and no splash
+frame was captured. Hardware remains untested. The upstream Fedora first-run
+and Welcome Center screens remain visible.
 
 `python3 -m unittest discover -s tests/config -v`: 5 tests pass. They cover the
 RPM file inventory (including `watermark.png`), the absence of package
@@ -32,9 +64,59 @@ attempt failed because `rpmbuild` chose sandboxed `/var/tmp`;
 `build-branding-rpm.sh` now directs all RPM temporary files into its fresh
 output directory. No host packages or boot settings were changed.
 
+### Accepted Stage 2 build
+
+`scripts/build/build-iso.sh` produced an accepted 0.2-2 image in
+`out/build-3UNby9k7`. Started 14:58, guest finished 15:27.
+
+- Wrapper `exit-code` 0, guest `result/result.code` 0.
+- `result/SHA256SUMS`, `iso-path.txt` and `builder-inputs.sha256` all present,
+  so unlike `out/build-Axnn4fY0` this run reached wrapper-level acceptance.
+- Artifact `out/build-3UNby9k7/result/UjwalOS-0.1.x86_64-44-0.iso`,
+  3,791,595,520 bytes, SHA-256
+  `30a7fe8e603e99ad6dc0dcb036eaf19a0a53486f3be2c052efc5b22c9ebc8d25`.
+  Re-verified after the fact with `sha256sum -c SHA256SUMS`: `OK`.
+- `UjwalOS-0.1.x86_64-44-0.packages` lists
+  `ujwalos-branding|0.2|2.fc44|noarch`.
+- `result/result.log` shows `+ plymouth-set-default-theme ujwalos` succeeding
+  and dracut including the `plymouth` module, so the boot theme was selected in
+  the image root.
+
+### Stage 2 live boot, partial
+
+`out/vm-2mGTBmPY` booted the 3UNby9k7 ISO headless via
+`scripts/test/test-iso.sh ... --headless` (launched 15:29) and reached a Plasma
+desktop. Observed, from the recorded frames:
+
+- UjwalOS Himalayan-dusk wallpaper applied, replacing the stock Fedora image.
+- Panel at the bottom with the packaged launcher favorites row
+  (`out/vm-2mGTBmPY/panel-left.jpg`).
+- krunner search opened and functional (`krunner2.png`).
+- Installer launched to its first screen (`anaconda1.png`).
+- GRUB offered `Start UjwalOS-0.1`, `Test this media & start UjwalOS-0.1` and
+  `Troubleshooting` (`boot/frame-01.png`). The boot menu is intentionally
+  unbranded; the branding package does not touch GRUB templates.
+- Stock "Welcome to Fedora Linux!" Welcome Center still present in the live
+  session. Re-branding the live-session welcome flow is out of Stage 2 scope
+  and is not recorded as a pass.
+
+Limits of that run, stated explicitly:
+
+- No installation was performed. `disk.qcow2` was still 197,248 bytes, so the
+  target disk was untouched and there is no installed system.
+- The session was the live user, whose shell configuration already existed.
+  This shows the packaged defaults render, but it does **not** show that a new
+  account inherits them, which is the actual Stage 2 gate.
+- The Plymouth splash was not captured. The frame burst began after the
+  desktop was already up; the theme's appearance on a real boot is unverified
+  even though the theme is installed and selected.
+- The VM was left running and idle at "Display output is not active"
+  (`current.png`, 15:50). It held the `disk.qcow2` write lock.
+
 ### Wrapper aborted after a successful compose
 
-`out/build-Axnn4fY0` is not a compose failure. The guest wrote `Box build done`
+Superseded by `out/build-3UNby9k7` above; retained because it explains why that
+run was repeated. `out/build-Axnn4fY0` is not a compose failure. The guest wrote `Box build done`
 with `result.code` 0, and the resulting package manifest lists
 `ujwalos-branding 0.2-1.fc44` together with the stock
 `plasma-login-manager 6.7.5`, `plasma-workspace 6.7.5`,

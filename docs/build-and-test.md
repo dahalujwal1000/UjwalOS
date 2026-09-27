@@ -11,7 +11,11 @@ profile `KDE-Desktop-Live`, source commit
 Stage 1 changes image/media names and explicitly includes `kde-connect`.
 Stage 2 adds a separately versioned `ujwalos-branding` RPM with a wallpaper,
 first-run Plasma defaults, login background and a Plymouth theme with a
-watermark. Installed Fedora
+watermark. The login background ships as
+`/usr/lib/plasmalogin/plasmalogin.conf.d/50-ujwalos-wallpaper.conf`, the only
+drop-in directory Plasma Login Manager ranks above its packaged
+`defaults.conf`; see [branding/README.md](../branding/README.md) for the source
+evidence. Installed Fedora
 identity, installer, first-run setup and boot templates remain upstream. The
 generated build script clears a temporary GRUB BLS path as described below.
 This is an internal engineering ISO; branding/trademark review is still required

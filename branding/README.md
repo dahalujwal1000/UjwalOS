@@ -6,6 +6,38 @@ script when creating a new shell configuration; user settings remain in
 `~/.config`. The login appearance uses Plasma Login Manager's wallpaper
 configuration, and the boot splash uses Plymouth's existing `two-step` module.
 
+## Login (greeter) wallpaper location
+
+`root/usr/lib/plasmalogin/plasmalogin.conf.d/50-ujwalos-wallpaper.conf` is not an
+arbitrary choice. Plasma Login Manager 6.7.5 builds its greeter configuration
+from four sources, in `PlasmaLoginSettings::getInstance()`
+(`src/frontend/settings/plasmaloginsettings.cpp`), and KConfig gives priority to
+the main file, then to `addConfigSources()` calls in reverse call order
+(`KConfig::addConfigSources`, `src/core/kconfig.h`, KConfigCore 6.30.0):
+
+| Priority | Path | Owner |
+|----------|------|-------|
+| highest | `/etc/plasmalogin.conf` | administrator |
+| | `/usr/lib/plasmalogin/plasmalogin.conf.d/*` | packages, including this one |
+| | `/usr/lib/plasmalogin/defaults.conf` | distribution |
+| lowest | `/etc/plasmalogin.conf.d/*` | local drop-ins |
+
+The distribution `defaults.conf` sets
+`[Greeter][Wallpaper][org.kde.image][General] Image`, so a drop-in in
+`/etc/plasmalogin.conf.d/` is shadowed and the greeter keeps the distribution
+wallpaper. 0.2-1 and 0.2-2 shipped there and were therefore ineffective. An
+administrator still overrides this package by editing `/etc/plasmalogin.conf`.
+
+Two further details come from the same release: the greeter reads the key
+`[Greeter] WallpaperPluginId` (`src/frontend/settings/plasmaloginsettingsbase.kcfg`;
+`WallpaperPlugin` is silently ignored, so the packaged `defaults.conf` does not
+set it and the plugin falls back to the schema default `org.kde.image`), and the
+image wallpaper plugin resolves `Image` through
+`KPackage::Package::setPath(QUrl::toLocalFile())`
+(`wallpapers/image/plugin/imagebackend.cpp`, `.../utils/mediaproxy.cpp`), which
+is why the value is a `file://` package path rather than a bare wallpaper name.
+`plasma-apply-wallpaperimage` writes the same form.
+
 The wallpaper at
 `root/usr/share/wallpapers/UjwalOS/contents/images/1672x941.png` was generated
 with the built-in image generation tool on 2026-09-27 for this project. The
