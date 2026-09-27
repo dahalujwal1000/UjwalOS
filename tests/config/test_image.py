@@ -27,13 +27,31 @@ class ImageTests(unittest.TestCase):
             prepare.prepare(derived)
             with tarfile.open(archive) as upstream:
                 for member in upstream.getmembers():
-                    if member.isfile() and member.name != "Fedora.kiwi":
+                    if member.isfile() and member.name not in ("Fedora.kiwi", "components/liveinstall.xml", "config.sh"):
                         self.assertEqual((derived / member.name).read_bytes(),
                                          upstream.extractfile(member).read(), member.name)
             tree = ET.parse(derived / "Fedora.kiwi")
             self.assertEqual(tree.getroot().get("name"), "UjwalOS-0.1")
             self.assertEqual(tree.findtext("preferences/release-version"), "44")
             self.assertEqual(tree.findtext("preferences/packagemanager"), "dnf5")
+            liveinstall = ET.parse(derived / "components/liveinstall.xml")
+            x86_type = liveinstall.find("./preferences[@profiles='LiveInstall'][@arch='x86_64']/type")
+            self.assertEqual(x86_type.get("fscreateoptions"), "-C 1048576")
+            self.assertEqual(x86_type.get("erofscompression"), "lzma,level=6")
+            with tarfile.open(archive) as upstream:
+                original_liveinstall = ET.fromstring(upstream.extractfile("components/liveinstall.xml").read())
+                original_config = upstream.extractfile("config.sh").read().decode()
+            original_liveinstall.find("./preferences[@profiles='LiveInstall'][@arch='x86_64']/type").set(
+                "fscreateoptions", "-C 1048576")
+            self.assertEqual(ET.tostring(liveinstall.getroot()), ET.tostring(original_liveinstall))
+            expected_config = original_config.replace(
+                "\nexit 0\n",
+                "\n# Kernel RPM hooks can leave KIWI's temporary root in GRUB's BLS search path.\n"
+                'if [[ "$kiwi_profiles" == *Live* ]]; then\n'
+                '    grub2-editenv /boot/grub2/grubenv unset blsdir\n'
+                'fi\n\nexit 0\n',
+            )
+            self.assertEqual((derived / "config.sh").read_text(), expected_config)
             self.assertFalse((derived / "repositories/core.xml").is_symlink())
             self.assertEqual((derived / "repositories/core.xml").read_bytes(),
                              (derived / "repositories/core-nonrawhide.xml").read_bytes())
@@ -98,6 +116,7 @@ class ImageTests(unittest.TestCase):
             self.assertIn(f"file={vm}/disk.qcow2,format=qcow2,if=virtio", args)
             self.assertIn(f"file={iso},media=cdrom,format=raw,readonly=on", args)
             self.assertIn(f"unix:{vm}/vnc.sock", args)
+            self.assertIn(f"unix:{vm}/qmp.sock,server=on,wait=off", args)
             subprocess.run([str(entry), "--installed", str(vm), "--headless"], env=env,
                            check=True, stdout=subprocess.DEVNULL)
             installed_args = json.loads(capture.read_text())

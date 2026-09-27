@@ -1,6 +1,7 @@
 # 0001 — Conventional Fedora KDE live/install image with RPM updates
 
-Date: 2026-09-26. Status: selected; KIWI description validated, compose tests in progress.
+Date: 2026-09-26. Status: selected; compose and VM installation/boot acceptance
+passed 2026-09-27. Hardware and release gates remain separate.
 
 ## Decision
 

@@ -10,7 +10,8 @@ profile `KDE-Desktop-Live`, source commit
 
 The first derivative changes image/media names and explicitly includes
 `kde-connect`. Desktop wallpaper, installed Fedora identity, installer,
-first-run setup, boot scripts and templates stay upstream. This is an internal
+first-run setup and boot templates stay upstream. The generated build script
+clears a temporary GRUB BLS path as described below. This is an internal
 engineering ISO; branding/trademark review is still required before publication.
 
 ## Dependencies
@@ -74,12 +75,12 @@ Prepared UjwalOS-0.1 from dfc49a5a10f69941179fdadd96aa6a5984f7c677
 Description validated: .../out/build-XXXXXXXX/description-validation.log
 ```
 
-On successful compose (not yet a boot certification):
+On successful compose (build success is recorded separately from VM boot certification):
 
 ```text
 ISO built: .../out/build-XXXXXXXX/result/<KIWI-generated-name>.iso
 <sha256>  <KIWI-generated-name>.iso
-Live boot, installer launch and installation remain UNTESTED.
+Live boot, installer launch and installation are recorded separately in `docs/status.md`.
 ```
 
 The script records the actual generated filename in `iso-path.txt`, with
@@ -108,6 +109,16 @@ The generated description materializes the upstream repository alias because
 mapped 9p sharing does not reliably expose host symlinks. The supported `boxroot`
 hook installs a builder-only KIWI drop-in selecting `isomd5sum`; this preserves
 Fedora's live media check rather than disabling it.
+The generated x86-64 LiveInstall description changes the inherited
+`-Efragments -C 1048576` EROFS creation options to `-C 1048576`.
+The previous builder's `mkfs.erofs 1.9.4`
+failed while committing a fragment; this retains the LZMA compression and
+1 MiB cluster setting. The generated `config.sh` also unsets `blsdir` in
+`/boot/grub2/grubenv` for live profiles after package installation. Kernel RPM
+hooks otherwise leave `/result/build/image-root/boot/loader/entries` there;
+Anaconda copies that build-only path into the installed system, hiding its
+kernel entries. Unsetting it restores GRUB's standard BLS lookup. Boot and
+installation still require separate VM tests.
 
 The VM sees the generated description and result directory, plus its disposable
 builder disk. No physical host disks or host bootloader paths are passed to it.
@@ -139,7 +150,8 @@ scripts/test/test-iso.sh out/build-XXXXXXXX/result/ACTUAL-NAME.iso --headless
 ```
 
 QEMU exposes VNC only through `out/vm-XXXXXXXX/vnc.sock` and a monitor through
-`monitor.sock`. Use a Unix-socket-capable VNC client or the monitor to capture
+`monitor.sock`. A local `qmp.sock` supports exact input events for VM testing.
+Use a Unix-socket-capable VNC client or the monitor to capture
 screenshots. The script records the command, QEMU stderr and serial output.
 Graphical Plasma may not write useful serial output; lack of serial output is
 not evidence that it failed or passed.

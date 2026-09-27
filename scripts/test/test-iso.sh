@@ -81,6 +81,7 @@ cmd=(qemu-system-x86_64 -name UjwalOS-v0.1-test -machine q35 "${accel[@]}"
      -drive "file=$vm/disk.qcow2,format=qcow2,if=virtio"
      "${media[@]}" -nic user,model=virtio-net-pci "${display[@]}"
      -monitor "unix:$vm/monitor.sock,server=on,wait=off"
+     -qmp "unix:$vm/qmp.sock,server=on,wait=off"
      -serial "file:$vm/serial.log")
 printf '%q ' "${cmd[@]}" > "$vm/qemu-command.sh"
 printf '\n' >> "$vm/qemu-command.sh"

@@ -1,8 +1,8 @@
 # Roadmap
 
 The full scope and acceptance wording are preserved in [plan.md](../plan.md).
-Stage 1 build tooling is implemented and undergoing compose/VM validation;
-completion is determined by the evidence in status.md.
+Stage 1 compose and VM acceptance passed on 2026-09-27;
+separate gate evidence and remaining release limits are in status.md.
 
 | Stage | Deliverable | Gate |
 | --- | --- | --- |
@@ -16,5 +16,7 @@ completion is determined by the evidence in status.md.
 | 7 | Recovery and release quality | Install, update, failed-update recovery, dual-boot review and repeated hardware tests pass |
 | 8 | Public v1.0 | Installation and recovery tested beyond one laptop; limitations published |
 
-Current bounded task: build the minimal pinned Fedora 44 KDE derivative and pass
-the live boot/installer/installed-boot gate. Custom applications remain deferred.
+Completed bounded task: build the minimal pinned Fedora 44 KDE derivative and
+pass the live boot/installer/installed-boot gate, including login and restart.
+Next implementation milestone is packaged desktop identity; custom applications
+remain deferred. Live GRUB warning diagnosis and release-limit reviews remain open.

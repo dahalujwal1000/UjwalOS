@@ -38,6 +38,25 @@ def prepare(destination):
                               '\t<include from="this://./ujwalos-packages.xml"/>\n</image>')
     ET.fromstring(derived)
     description.write_text(derived)
+    liveinstall = destination / "components/liveinstall.xml"
+    liveinstall_tree = ET.parse(liveinstall)
+    types = liveinstall_tree.findall("./preferences[@profiles='LiveInstall'][@arch='x86_64']/type")
+    if len(types) != 1 or types[0].get("filesystem") != "erofs" or \
+            types[0].get("fscreateoptions") != "-Efragments -C 1048576":
+        raise ValueError("Unexpected upstream x86-64 live filesystem options")
+    types[0].set("fscreateoptions", "-C 1048576")
+    liveinstall_tree.write(liveinstall, encoding="unicode")
+    config = destination / "config.sh"
+    script = config.read_text()
+    ending = "\nexit 0\n"
+    if script.count(ending) != 1:
+        raise ValueError("Unexpected upstream config.sh ending")
+    script = script.replace(ending,
+        "\n# Kernel RPM hooks can leave KIWI's temporary root in GRUB's BLS search path.\n"
+        "if [[ \"$kiwi_profiles\" == *Live* ]]; then\n"
+        "    grub2-editenv /boot/grub2/grubenv unset blsdir\n"
+        "fi\n" + ending)
+    config.write_text(script)
     shutil.copyfile(ROOT / "image/compose/packages.xml", destination / "ujwalos-packages.xml")
     # Official boxed-builder hook: copied into the disposable builder, not ISO.
     shutil.copytree(ROOT / "image/compose/boxroot", destination / "boxroot")
