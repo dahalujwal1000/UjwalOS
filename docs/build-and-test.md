@@ -10,7 +10,8 @@ profile `KDE-Desktop-Live`, source commit
 
 Stage 1 changes image/media names and explicitly includes `kde-connect`.
 Stage 2 adds a separately versioned `ujwalos-branding` RPM with a wallpaper,
-first-run Plasma defaults, login background and Plymouth theme. Installed Fedora
+first-run Plasma defaults, login background and a Plymouth theme with a
+watermark. Installed Fedora
 identity, installer, first-run setup and boot templates remain upstream. The
 generated build script clears a temporary GRUB BLS path as described below.
 This is an internal engineering ISO; branding/trademark review is still required
@@ -129,6 +130,13 @@ hooks otherwise leave `/result/build/image-root/boot/loader/entries` there;
 Anaconda copies that build-only path into the installed system, hiding its
 kernel entries. Unsetting it restores GRUB's standard BLS lookup. Boot and
 installation still require separate VM tests.
+
+Do not edit `build-iso.sh` while a compose is running. Bash re-reads an
+executing script, so a change made during a long compose can fail afterwards
+with a spurious `unexpected EOF while looking for matching` parse error even
+though the guest succeeded and the ISO is complete; that run then has no
+wrapper exit status and no `SHA256SUMS`. Edit first, wait for the compose to
+exit, or copy the wrapper into the run directory and execute that copy.
 
 The VM sees the generated description and result directory, plus its disposable
 builder disk. No physical host disks or host bootloader paths are passed to it.

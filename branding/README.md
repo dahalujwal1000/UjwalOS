@@ -9,15 +9,18 @@ configuration, and the boot splash uses Plymouth's existing `two-step` module.
 The wallpaper at
 `root/usr/share/wallpapers/UjwalOS/contents/images/1672x941.png` was generated
 with the built-in image generation tool on 2026-09-27 for this project. The
-eight Plymouth progress frames were generated from original simple shapes with
-ImageMagick. No Fedora or KDE artwork was copied. The wallpaper prompt was:
+eight Plymouth progress frames and the UjwalOS wordmark were generated from
+original simple shapes and text with ImageMagick. No Fedora or KDE artwork was
+copied. The wallpaper prompt was:
 
-> A landscape 16:9 desktop wallpaper for UjwalOS: precise layered Himalayan
-> ridgelines at dusk, subtle geometric light paths integrated into the terrain,
-> clean digital matte-painting detail. Place visual interest on the right and
-> lower center, with quiet space on the left for desktop icons and in the center
-> for login text. Deep charcoal and indigo sky, cool teal highlights, gentle
-> coral sunrise band. No text, logo, watermark, people, UI or bokeh.
+> Use case: stylized-concept
+> Asset type: operating system desktop wallpaper for UjwalOS, Fedora KDE gaming desktop, landscape 16:9 widescreen
+> Primary request: an original, polished bitmap wallpaper that evokes a powerful but calm workspace.
+> Scene/backdrop: precise layered silhouettes of Himalayan ridgelines at dusk, with subtle geometric light paths reminiscent of circuits integrated into the terrain; atmospheric depth without blur.
+> Style/medium: sophisticated digital matte painting, clean edges and restrained detail, not photographic and not a generic gradient.
+> Composition/framing: 16:9 wide image; visual interest concentrated toward the right and lower center; generous quiet negative space on left for desktop icons and center for login text. No focal object that becomes cropped on 16:10 screens.
+> Color palette: deep charcoal and indigo sky, cool teal highlights, gentle coral sunrise band; readable dark and light UI contrast.
+> Constraints: no text, no logos, no watermark, no people, no stock desktop icons or UI, no orbs/bokeh. High fidelity, usable as desktop and login background.
 
 `LicenseRef-UjwalOS-Internal` is an internal placeholder, not an external
 redistribution license. See [licensing policy](../LICENSES/README.md).

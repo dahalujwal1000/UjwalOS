@@ -40,10 +40,12 @@ Boot, gaming and phone integration remain untested.
 ### Stage 2 detail
 
 The `ujwalos-branding` RPM packages an original wallpaper, first-run Plasma
-global theme and panel template, Plasma Login Manager background, and Plymouth
-theme. A new ISO compose and VM validation are in progress. Stage 2 is complete
-only after a new account receives the defaults and an existing account keeps
-its customizations through a package update. See [current evidence](docs/status.md).
+global theme and panel template, Plasma Login Manager background, and a
+Plymouth theme with watermark. A compose of revision 0.2-1 finished at guest
+level, but its wrapper aborted before recording the checksum, and no VM
+validation has been run. Stage 2 is complete only after a new account receives
+the defaults and an existing account keeps its customizations through a package
+update. See [current evidence](docs/status.md).
 
 ## Project documents
 

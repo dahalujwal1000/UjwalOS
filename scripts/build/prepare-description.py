@@ -54,10 +54,12 @@ def prepare(destination):
         raise ValueError("Unexpected upstream config.sh ending")
     script = script.replace(ending,
         "\n# Kernel RPM hooks can leave KIWI's temporary root in GRUB's BLS search path.\n"
-        "if [[ \"$kiwi_profiles\" == *Live* ]]; then\n"
+        "if [[ \"$kiwi_profiles\" == *KDE-Desktop-Live* ]]; then\n"
         "    rpm -Uvh /image/ujwalos-branding.rpm\n"
         "    plymouth-set-default-theme ujwalos\n"
         "    rm /image/ujwalos-branding.rpm\n"
+        "fi\n"
+        "if [[ \"$kiwi_profiles\" == *Live* ]]; then\n"
         "    grub2-editenv /boot/grub2/grubenv unset blsdir\n"
         "fi\n" + ending)
     config.write_text(script)

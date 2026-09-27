@@ -2,29 +2,52 @@
 
 ## 2026-09-27 - Stage 2 desktop identity in progress
 
-The `ujwalos-branding` 0.2 noarch RPM now contains an original Himalayan dusk
+The `ujwalos-branding` 0.2-2 noarch RPM contains an original Himalayan dusk
 wallpaper, a Plasma global theme with first-run panel, launcher favorites and wallpaper layout,
 Plasma Login Manager wallpaper configuration, and a Plymouth two-step theme
-with original indicator frames. The package installs only system files; no
-home directory files or recurring preference-reset scripts are included.
-The generated live `config.sh` installs it into the disposable image root and
-selects the Plymouth theme. The image still uses Fedora KDE and RPM updates.
+with original indicator frames and a wordmark watermark. The package installs
+only system files; no home directory files or recurring preference-reset
+scripts are included. The generated live `config.sh` installs it into the
+disposable image root and selects the Plymouth theme, and now restricts that
+installation to the `KDE-Desktop-Live` profile; the GRUB `blsdir` cleanup still
+applies to every live profile. The image still uses Fedora KDE and RPM updates.
 
 | Gate | Current evidence |
 | --- | --- |
-| Package code written | PASS: `packaging/ujwalos-branding.spec`, `branding/root/` |
+| Package code written | PASS: `packaging/ujwalos-branding.spec` 0.2-2, `branding/root/` |
 | RPM built | PASS: generated per build under `out/build-*/rpmbuild/RPMS/noarch/` |
-| KIWI description validated | PASS: `scripts/build/build-iso.sh --validate`, `out/build-vBjToPyd/` |
-| Stage 2 ISO built | Revision 0.2-1 preview compose running in `out/build-Axnn4fY0/`; result not yet known. Source is now 0.2-2. |
+| KIWI description validated | PASS: `scripts/build/build-iso.sh --validate`, `out/build-vBjToPyd/` and `out/build-AkFFkfM2/` |
+| Stage 2 ISO built | Revision 0.2-1 compose finished in `out/build-Axnn4fY0/`: guest `result.code` 0 and a 3,625,525,248-byte ISO, SHA-256 `ea6307c661abd5cf626db81e5a1e6a26df2c9676aeb9264f57d11280871078ec`. The wrapper then aborted and wrote no `SHA256SUMS`, so no wrapper-level build acceptance exists and that ISO predates 0.2-2. No compose has been run for 0.2-2. |
 | Stage 2 live boot / install / login | Not yet tested |
 | New-account defaults / existing-account update | Not yet tested |
 | Hardware | Not tested |
 
-`python3 -m unittest discover -s tests/config -v`: 5 tests pass, including RPM
-file inventory and the generated image script. The earlier first attempt failed
-because `rpmbuild` chose sandboxed `/var/tmp`; `build-branding-rpm.sh` now
-directs all RPM temporary files into its fresh output directory. No host
-packages or boot settings were changed.
+`python3 -m unittest discover -s tests/config -v`: 5 tests pass. They cover the
+RPM file inventory (including `watermark.png`), the absence of package
+scriptlets and of `/home/` or `/root/` paths, the generated image script with
+both profile gates, and the ISO/QEMU refusal paths. `bash -n
+scripts/build/build-iso.sh scripts/build/build-branding-rpm.sh
+scripts/test/test-iso.sh` and `git diff --check`: exit 0. The earlier first RPM
+attempt failed because `rpmbuild` chose sandboxed `/var/tmp`;
+`build-branding-rpm.sh` now directs all RPM temporary files into its fresh
+output directory. No host packages or boot settings were changed.
+
+### Wrapper aborted after a successful compose
+
+`out/build-Axnn4fY0` is not a compose failure. The guest wrote `Box build done`
+with `result.code` 0, and the resulting package manifest lists
+`ujwalos-branding 0.2-1.fc44` together with the stock
+`plasma-login-manager 6.7.5`, `plasma-workspace 6.7.5`,
+`plymouth`/`plymouth-plugin-two-step` 24.004.60 and `kde-connect 26.08.1`
+(2212 packages). The wrapper process, started at 14:20, was edited at 14:21:46
+(the `rpmbuild` tool check). Bash re-reads an executing script, so the shifted
+byte offsets produced
+`scripts/build/build-iso.sh: line 89: unexpected EOF while looking for matching '"'`
+followed by `FAILED (2)`. The script itself is valid: `bash -n` exits 0 and all
+5 repository tests pass. Because the wrapper exited before its checksum step,
+`result/SHA256SUMS`, `iso-path.txt` and `exit-code` are absent, and
+`test-iso.sh --check-only` refuses that ISO by design. Do not edit the wrapper
+while a compose is running; wait for exit or execute a copy of it.
 
 Upstream sources checked 2026-09-27: [KDE Plasma first-run scripting](https://develop.kde.org/docs/plasma/scripting/),
 [KDE global themes](https://develop.kde.org/docs/plasma/theme/theme-porting-to-plasma6/),
