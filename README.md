@@ -45,9 +45,10 @@ Plymouth theme with watermark. The corrected 0.3-1 image in
 `out/build-8bD6L764` passed the build and media checks. A fresh VM installation
 booted from disk with the ISO detached; its login screen showed the UjwalOS
 wallpaper, and a new account received the wallpaper and bottom panel. Stage 2
-remains in progress until an existing account's customizations survive the
-0.2-2 to 0.3-1 package update. The installed Plymouth splash and hardware are
-also unverified. See
+now passes the fresh-account and existing-account update gates: a user-selected
+wallpaper and panel configuration survived a 0.2-2 to 0.3-1 RPM update and
+reboot. The installed Plymouth splash remains unverified, so Stage 2 is still
+in progress. Hardware is untested. See
 [current evidence](docs/status.md).
 
 ## Project documents

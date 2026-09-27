@@ -20,11 +20,33 @@ applies to every live profile. The image still uses Fedora KDE and RPM updates.
 | Stage 2 ISO built | PASS: `out/build-8bD6L764/`, wrapper and guest exit 0, `SHA256SUMS` and `iso-path.txt` present. 3,791,599,616-byte ISO, SHA-256 `18f1b66d3579d25b43cea4c9437885979c7a7b8860310b94848f22ad4b1417da`. Manifest lists `ujwalos-branding 0.3-1.fc44`. |
 | Stage 2 live boot | PASS: `out/vm-St43Uqg6` booted the 0.3-1 ISO, showed the desktop defaults and launched Anaconda. |
 | Stage 2 install / installed login | PASS: Anaconda reported successful installation; the same VM booted its private disk with the ISO detached, completed first-run setup, and reached a branded login and Plasma desktop. |
-| New-account defaults / existing-account update | New-account wallpaper and bottom panel PASS in `out/vm-St43Uqg6`; existing-account customization survival through RPM update not yet tested. |
+| New-account defaults / existing-account update | PASS in `out/vm-St43Uqg6`: new account received wallpaper and bottom panel; after downgrading the RPM to 0.2-2, the account selected the Fedora wallpaper, upgraded to 0.3-1, and retained the wallpaper and panel configuration through reboot and login. |
 | Hardware | Not tested |
 
-The fresh-account half of the Stage 2 gate passed. Package update preservation
-and the installed Plymouth selection remain open.
+Both account gates passed. Installed Plymouth selection remains open.
+
+### Existing-account update preservation
+
+Inside the installed `out/vm-St43Uqg6` VM, `curl -fLo /tmp/old.rpm
+http://10.0.2.2:8123/ujwalos-branding-0.2-2.fc44.noarch.rpm` downloaded the
+previous package from the local test server. `sudo rpm -Uvh --oldpackage
+/tmp/old.rpm` installed 0.2-2. As `stg2test`,
+`plasma-apply-wallpaperimage /usr/share/wallpapers/Fedora/` changed the
+wallpaper visibly (`custom-before.png`). `sha256sum
+~/.config/plasma-org.kde.plasma.desktop-appletsrc` recorded
+`ed56d206e1c584faa527d5e2f7e123c26c4d59b996e793548a506954204178b2`.
+The installed `plasma-apply-wallpaperimage --help` confirmed that it accepts an
+installed wallpaper package path.
+
+`curl -fLo /tmp/new.rpm
+http://10.0.2.2:8123/ujwalos-branding-0.3-1.fc44.noarch.rpm` and
+`sudo rpm -Uvh /tmp/new.rpm` completed successfully (`update-result.png`).
+`rpm -q ujwalos-branding` then reported `0.3-1.fc44.noarch`, and the per-user
+Plasma configuration hash remained exactly the same (`update-verified.png`).
+After `systemctl reboot` and login, the Fedora wallpaper and bottom panel were
+still visible (`post-reboot-desktop.png`). This tests one customized account
+and one package update path in a VM; it does not prove every Plasma preference
+or hardware configuration.
 
 ### Corrected 0.3-1 image and installation
 
