@@ -1,29 +1,88 @@
 # Status and unreleased notes
 
-## 2026-09-27 - Stage 2 desktop identity in progress
+## 2026-09-28 - Stage 2 desktop identity complete
 
-The `ujwalos-branding` 0.3-1 noarch RPM contains an original Himalayan dusk
+The `ujwalos-branding` 0.4-1 noarch RPM contains an original Himalayan dusk
 wallpaper, a Plasma global theme with first-run panel, launcher favorites and wallpaper layout,
 Plasma Login Manager wallpaper configuration, and a Plymouth two-step theme
-with original indicator frames and a wordmark watermark. The package installs
-only system files; no home directory files or recurring preference-reset
-scripts are included. The generated live `config.sh` installs it into the
+with original indicator, prompt and wordmark assets. The package installs only
+system files; no home directory files, package scriptlets or recurring
+preference-reset scripts are included. The generated live `config.sh` installs it into the
 disposable image root and selects the Plymouth theme, and now restricts that
 installation to the `KDE-Desktop-Live` profile; the GRUB `blsdir` cleanup still
 applies to every live profile. The image still uses Fedora KDE and RPM updates.
 
 | Gate | Current evidence |
 | --- | --- |
-| Package code written | PASS: `packaging/ujwalos-branding.spec` 0.3-1, `branding/root/` |
-| RPM built | PASS: `out/build-8bD6L764/rpmbuild/RPMS/noarch/ujwalos-branding-0.3-1.fc44.noarch.rpm`, built by `prepare-description.py` inside the run directory |
-| KIWI description validated | PASS: `scripts/build/build-iso.sh --validate`, `out/build-vBjToPyd/` and `out/build-AkFFkfM2/` |
-| Stage 2 ISO built | PASS: `out/build-8bD6L764/`, wrapper and guest exit 0, `SHA256SUMS` and `iso-path.txt` present. 3,791,599,616-byte ISO, SHA-256 `18f1b66d3579d25b43cea4c9437885979c7a7b8860310b94848f22ad4b1417da`. Manifest lists `ujwalos-branding 0.3-1.fc44`. |
-| Stage 2 live boot | PASS: `out/vm-St43Uqg6` booted the 0.3-1 ISO, showed the desktop defaults and launched Anaconda. |
+| Package code written | PASS: `packaging/ujwalos-branding.spec` 0.4-1, `branding/root/` |
+| RPM built | PASS: `out/build-4MOSl8sm/rpmbuild/RPMS/noarch/ujwalos-branding-0.4-1.fc44.noarch.rpm`, built by `prepare-description.py` inside the run directory |
+| KIWI description validated | PASS: `scripts/build/build-iso.sh --validate`, `out/build-hLBYHE0T/` |
+| Stage 2 ISO built | PASS: `out/build-4MOSl8sm/`, wrapper and guest exit 0, `SHA256SUMS` and `iso-path.txt` present. 3,791,638,528-byte ISO, SHA-256 `261b3a9f24f597ba28391d6684d93cb7fc4728fffa4343c3ce75ae5d3b5f0703`. Manifest lists `ujwalos-branding 0.4-1.fc44`. |
+| Stage 2 live boot | PASS: `out/vm-EmDO1nQz` booted the 0.4-1 ISO, visibly rendered the UjwalOS Plymouth splash, and reached the branded Plasma live desktop. |
 | Stage 2 install / installed login | PASS: Anaconda reported successful installation; the same VM booted its private disk with the ISO detached, completed first-run setup, and reached a branded login and Plasma desktop. |
 | New-account defaults / existing-account update | PASS in `out/vm-St43Uqg6`: new account received wallpaper and bottom panel; after downgrading the RPM to 0.2-2, the account selected the Fedora wallpaper, upgraded to 0.3-1, and retained the wallpaper and panel configuration through reboot and login. |
+| Installed Plymouth splash | PASS in `out/vm-St43Uqg6`: 0.4-1 was installed, the initramfs was regenerated, and a disk-only reboot visibly rendered the UjwalOS ring, wordmark and background. |
 | Hardware | Not tested |
 
-Both account gates passed. Installed Plymouth selection remains open.
+All Stage 2 gates pass. Hardware and broader release qualification remain for
+later stages; this is not a public release.
+
+### Final 0.4-1 image
+
+`scripts/build/build-iso.sh` accepted `out/build-4MOSl8sm` with wrapper
+`exit-code` 0 and guest `result/result.code` 0. The ISO is
+`result/UjwalOS-0.1.x86_64-44-0.iso` (3,791,638,528 bytes, SHA-256
+`261b3a9f24f597ba28391d6684d93cb7fc4728fffa4343c3ce75ae5d3b5f0703`).
+Its package manifest lists `ujwalos-branding|0.4|1.fc44|noarch`.
+`scripts/test/test-iso.sh out/build-4MOSl8sm/result/UjwalOS-0.1.x86_64-44-0.iso
+--check-only` passed SHA-256, ISO9660 and UEFI catalog checks.
+`python3 -m unittest discover -s tests/config -v` passed all 5 tests; `bash -n
+scripts/build/build-iso.sh scripts/build/build-branding-rpm.sh
+scripts/build/generate-plymouth-prompts.sh scripts/test/test-iso.sh` and
+`git diff --check` exited 0.
+
+`out/vm-EmDO1nQz` then booted that exact ISO. Recorded frame
+`stage2-live-0020.png` shows the UjwalOS boot wordmark on the intended dark
+background; later frames show the Himalayan wallpaper and the complete live
+Plasma desktop. This is a live-boot check, not a second installation test. The
+0.3-1 image had already passed a fresh blank-disk installation and installed
+login test, and the 0.4-1 branding RPM was separately verified in that
+installed VM before this final compose.
+
+### Plymouth fallback diagnosis and 0.4 VM verification
+
+On 2026-09-27, an installed boot frame capture of `out/vm-St43Uqg6`
+showed Fedora's gray fallback dots even though `plymouth-set-default-theme`
+reported `ujwalos`, `/etc/plymouth/plymouthd.conf` selected it, and the active
+initramfs contained the theme and `two-step.so`. A manual Plymouth preview
+with `sudo plymouthd --debug --debug-file=/tmp/plymouth-debug.log
+--tty=/dev/tty4` and `sudo plymouth --show-splash` reproduced the fallback.
+The debug log shows `two-step` loading the UjwalOS theme, failing at
+`show_splash_screen: loading lock image` with `No such file or directory`,
+then loading the distribution `bgrt` theme. This is an asset omission, not a
+theme-selection problem. Evidence is in
+`out/vm-St43Uqg6/theme-transition.png` and `plymouth-preview.png`.
+
+`ujwalos-branding` 0.4-1 adds original `lock.png`, `entry.png`, and
+`bullet.png` prompt sprites for Plymouth's two-step plugin, generated by
+`bash scripts/build/generate-plymouth-prompts.sh
+branding/root/usr/share/plymouth/themes/ujwalos`. The RPM was built with
+`bash scripts/build/build-branding-rpm.sh out/stage2-fix` and upgraded inside
+the same disposable installed VM using `sudo rpm -Uvh
+/tmp/branding-0.4.rpm`; the package transaction passed. A new manual preview
+rendered the UjwalOS background and wordmark
+(`out/vm-St43Uqg6/plymouth-fix-preview.png`). After `sudo dracut -f`,
+`sudo lsinitrd /boot/initramfs-7.2.7-200.fc44.x86_64.img` listed all three
+sprites (`initrd-sprites.png`). A disk-only reboot then visibly rendered the
+teal progress ring, UjwalOS wordmark, and intended dark background
+(`fixed-boot-0060.png`) before the branded login. The fresh 0.4 ISO build and
+live boot are recorded in the preceding section.
+
+The manual `dracut -f` was performed only inside the disposable VM. The
+branding RPM has no scriptlets and does not rebuild an existing installation's
+initramfs on package update; a later normal kernel/initramfs regeneration is
+needed for the new splash assets to take effect on that path. No host boot
+settings, packages, or disks were changed.
 
 ### Existing-account update preservation
 
@@ -48,7 +107,7 @@ still visible (`post-reboot-desktop.png`). This tests one customized account
 and one package update path in a VM; it does not prove every Plasma preference
 or hardware configuration.
 
-### Corrected 0.3-1 image and installation
+### Corrected 0.3-1 image and installation (superseded)
 
 `scripts/build/build-iso.sh` accepted `out/build-8bD6L764` with wrapper
 `exit-code` 0 and guest `result/result.code` 0. The ISO is
@@ -71,13 +130,13 @@ reported `ujwalos-branding-0.3-1.fc44.noarch` (`rpm-before.png`). The live
 session was terminated after Anaconda completion to detach the ISO. No host
 disk or boot setting was changed.
 
-The generated live initrd contains the UjwalOS Plymouth theme and selects it;
-the installed system's splash selection has not been proven, and no splash
-frame was captured. Hardware remains untested. The upstream Fedora first-run
-and Welcome Center screens remain visible.
+At this earlier checkpoint, the generated live initrd contained and selected
+the UjwalOS Plymouth theme, but the installed splash had not yet been proven.
+That gap is closed by the 0.4-1 evidence above. Hardware remains untested. The
+upstream Fedora first-run and Welcome Center screens remain visible.
 
 `python3 -m unittest discover -s tests/config -v`: 5 tests pass. They cover the
-RPM file inventory (including `watermark.png`), the absence of package
+RPM file inventory (including the watermark and prompt sprites), the absence of package
 scriptlets and of `/home/` or `/root/` paths, the generated image script with
 both profile gates, and the ISO/QEMU refusal paths. `bash -n
 scripts/build/build-iso.sh scripts/build/build-branding-rpm.sh

@@ -84,6 +84,10 @@ class ImageTests(unittest.TestCase):
             self.assertIn("Image=file:///usr/share/wallpapers/UjwalOS/", greeter_conf.decode())
             self.assertIn("/usr/share/plymouth/themes/ujwalos/ujwalos.plymouth", paths)
             self.assertIn("/usr/share/plymouth/themes/ujwalos/watermark.png", paths)
+            for sprite in ("lock.png", "entry.png", "bullet.png"):
+                self.assertIn(f"/usr/share/plymouth/themes/ujwalos/{sprite}", paths)
+                self.assertTrue((ROOT / "branding/root/usr/share/plymouth/themes/ujwalos" / sprite)
+                                .read_bytes().startswith(b"\x89PNG\r\n\x1a\n"))
             self.assertFalse((derived / "repositories/core.xml").is_symlink())
             self.assertEqual((derived / "repositories/core.xml").read_bytes(),
                              (derived / "repositories/core-nonrawhide.xml").read_bytes())
@@ -97,6 +101,7 @@ class ImageTests(unittest.TestCase):
 
     def test_shell_syntax(self):
         for path in ("scripts/build/build-iso.sh", "scripts/build/build-branding-rpm.sh",
+                     "scripts/build/generate-plymouth-prompts.sh",
                      "scripts/test/test-iso.sh"):
             subprocess.run(["bash", "-n", str(ROOT / path)], check=True)
 

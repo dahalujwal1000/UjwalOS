@@ -1,5 +1,5 @@
 Name:           ujwalos-branding
-Version:        0.3
+Version:        0.4
 Release:        1%{?dist}
 Summary:        UjwalOS desktop, login, and boot appearance
 License:        LicenseRef-UjwalOS-Internal

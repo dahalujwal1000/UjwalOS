@@ -54,5 +54,12 @@ copied. The wallpaper prompt was:
 > Color palette: deep charcoal and indigo sky, cool teal highlights, gentle coral sunrise band; readable dark and light UI contrast.
 > Constraints: no text, no logos, no watermark, no people, no stock desktop icons or UI, no orbs/bokeh. High fidelity, usable as desktop and login background.
 
+Plymouth's `two-step` plugin requires `lock.png`, `entry.png`, and `bullet.png`
+for its password prompt even on an unencrypted installation. The original
+sprites in the theme were generated with
+`scripts/build/generate-plymouth-prompts.sh branding/root/usr/share/plymouth/themes/ujwalos`.
+Omitting `lock.png` caused the plugin to fail at `show_splash_screen` and fall
+back to Fedora's `bgrt` theme in the installed VM.
+
 `LicenseRef-UjwalOS-Internal` is an internal placeholder, not an external
 redistribution license. See [licensing policy](../LICENSES/README.md).

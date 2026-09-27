@@ -9,7 +9,7 @@ desktop layout, and opt-in Android continuity through KDE Connect.
 |-------|-------------|--------|
 | **0 — Specification** | Architecture, image-strategy decision, security model, compatibility review, build plan | ✅ Complete |
 | **1 — Bootable v0.1** | Fedora KDE live ISO with minimal UjwalOS branding | ✅ Complete |
-| 2 — Desktop identity | Taskbar layout, theme, wallpaper, login, boot splash | 🔧 In progress |
+| **2 — Desktop identity** | Taskbar layout, theme, wallpaper, login, boot splash | ✅ Complete |
 | 3 — Gaming foundation | Steam/Proton validation, driver flow, gaming tools | ⬜ Not started |
 | 4 — Gaming Center | Qt/QML app, profiles, per-game settings | ⬜ Not started |
 | 5 — Android continuity | KDE Connect phone panel | ⬜ Not started |
@@ -39,17 +39,21 @@ Boot, gaming and phone integration remain untested.
 
 ### Stage 2 detail
 
-The `ujwalos-branding` RPM packages an original wallpaper, first-run Plasma
-global theme and panel template, Plasma Login Manager background, and a
-Plymouth theme with watermark. The corrected 0.3-1 image in
-`out/build-8bD6L764` passed the build and media checks. A fresh VM installation
-booted from disk with the ISO detached; its login screen showed the UjwalOS
-wallpaper, and a new account received the wallpaper and bottom panel. Stage 2
-now passes the fresh-account and existing-account update gates: a user-selected
-wallpaper and panel configuration survived a 0.2-2 to 0.3-1 RPM update and
-reboot. The installed Plymouth splash remains unverified, so Stage 2 is still
-in progress. Hardware is untested. See
-[current evidence](docs/status.md).
+Stage 2 is complete. The `ujwalos-branding` 0.4-1 RPM packages an original
+wallpaper, first-run Plasma global theme and panel template, Plasma Login
+Manager background, and a Plymouth theme with original animation and prompt
+assets. A new account received the intended wallpaper and panel, while an
+existing account retained its selected wallpaper and Plasma configuration
+through a package update and reboot. The corrected Plymouth theme rendered in
+an installed disk-only VM boot and in the final ISO's live boot.
+
+The accepted Stage 2 image is
+`out/build-4MOSl8sm/result/UjwalOS-0.1.x86_64-44-0.iso` (3,791,638,528 bytes,
+SHA-256 `261b3a9f24f597ba28391d6684d93cb7fc4728fffa4343c3ce75ae5d3b5f0703`).
+It passed the compose result, checksum, ISO9660, UEFI catalog and live Plasma
+boot gates. This remains an internal engineering image: hardware, Secure Boot,
+gaming, phone integration and public-release licensing are not Stage 2 claims.
+See [current evidence](docs/status.md).
 
 ## Project documents
 
