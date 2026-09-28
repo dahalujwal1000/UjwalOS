@@ -1,0 +1,2 @@
+# Development/offscreen tests only; Fedora RPM dependency review is pending.
+PySide6-Essentials==6.11.2

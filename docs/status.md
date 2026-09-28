@@ -1,5 +1,57 @@
 # Status and unreleased notes
 
+## 2026-09-28 - Stage 4 Qt profile editor
+
+Implemented `apps/gaming-center/main.py` and `Main.qml`: unprivileged Qt/QML
+profile create/edit/save, confirmed deletion, local reset, launch-option preview
+and read-only tool availability. Invalid input and storage errors are visible;
+corrupt storage disables editing instead of replacing data. QLockFile prevents
+concurrent editor instances. Missing theme icons fall back to text. The UI
+does not launch processes, apply Steam options or change system settings.
+
+Verification:
+
+- `python3 -m unittest discover -s tests/config -v`: 14 passed.
+- `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software out/stage4-venv/bin/python
+  -m unittest discover -s tests/ui -v`: five passed, including real QML load/save,
+  CRUD persistence, failed-save preservation, corrupt storage and lock exclusion.
+- The same Qt command with `QT_SCALE_FACTOR=2`: five passed.
+- Screenshots at 840x600 and 560x500 inspected in `out/stage4-ui/`; missing icons
+  found and fixed with text fallbacks. No QML warnings in the final smoke test.
+- `git diff --check`: passed.
+
+Dependencies were downloaded only into `out/stage4-venv` after the sandbox's
+network lookup failed; PySide6-Essentials and shiboken6 versions are 6.11.2.
+No host system packages changed. This is development evidence, not Fedora RPM
+dependency/license clearance, Plasma/Wayland acceptance or a new ISO result.
+System monitoring, privileged integration and crash/reboot restoration remain
+unimplemented. Stage 3 implementation/ISO/installation evidence remains valid,
+but its game/baseline, physical graphics and controller gates remain untested;
+the phase cannot yet be truthfully reported as fully complete.
+
+## 2026-09-28 - Stage 4 profile backend started
+
+The owner requested the next phase. Requirements and acceptance gates are in
+[gaming-center.md](gaming-center.md); Stage 3 is not marked complete.
+`apps/gaming-center/profiles.py` now validates per-game requested settings,
+generates fixed GameMode/MangoHud launch-option previews, resets local requested
+values, and reads/writes versioned JSON with private temporary files and atomic
+replacement. It executes no commands and makes no system or Steam changes.
+Malformed/unknown documents are rejected without rewriting them. Multiple UI
+instances and power-loss durability are not validated by this backend milestone.
+
+`python3 -m unittest discover -s tests/config -v` exited 0: 14 tests passed,
+including seven new tests covering validation, reset, fixed command tokens,
+private save permissions, round-trip persistence, duplicate rejection and
+preservation of the old file when replacement fails. `git diff --check` exited 0.
+
+No Qt frontend, helper or runtime monitoring is implemented. PySide6 is absent
+on the host; no host packages were installed. No Stage 4 RPM/ISO, VM boot,
+installation or hardware test was performed. The next bounded milestone is
+the unprivileged Qt/QML profile editor and read-only status adapter.
+The goal tracker refused a new goal while Stage 3 remains unfinished; the new
+requirements are recorded in the repository rather than falsely completing it.
+
 ## 2026-09-28 - Stage 3 gaming foundation in progress
 
 The new `ujwalos-gaming-setup` 0.1-1 RPM packages a user-run terminal setup

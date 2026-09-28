@@ -24,7 +24,11 @@ assets. First-login defaults must allow user changes to survive updates. Plasma
 Login Manager uses its supported wallpaper configuration rather than an SDDM
 theme; login validation follows a fresh image boot/install test.
 
-Future Qt 6/QML applications run as the user. Reuse KDE Connect's supported
+The Stage 4 Qt 6/QML profile editor runs as the user, stores requested settings
+under Qt's application config directory and locks out competing instances.
+It does not execute games or mutate system settings. See
+[Gaming Center requirements](gaming-center.md) for its pending integration gates.
+Reuse KDE Connect's supported
 interfaces for local continuity. A privileged helper is deferred until a
 specific operation needs it; define a narrow D-Bus/PolicyKit contract first.
 Gaming Mode must journal previous state and restore it on disable, game exit,
