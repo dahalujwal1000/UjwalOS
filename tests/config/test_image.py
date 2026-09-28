@@ -50,9 +50,11 @@ class ImageTests(unittest.TestCase):
                 'if [[ "$kiwi_profiles" == *KDE-Desktop-Live* ]]; then\n'
                 '    rpm -Uvh /image/ujwalos-branding.rpm\n'
                 '    rpm -Uvh /image/ujwalos-gaming-setup.rpm\n'
+                '    rpm -Uvh /image/ujwalos-apps.rpm\n'
                 '    plymouth-set-default-theme ujwalos\n'
                 '    rm /image/ujwalos-branding.rpm\n'
                 '    rm /image/ujwalos-gaming-setup.rpm\n'
+                '    rm /image/ujwalos-apps.rpm\n'
                 'fi\n'
                 'if [[ "$kiwi_profiles" == *Live* ]]; then\n'
                 '    grub2-editenv /boot/grub2/grubenv unset blsdir\n'
@@ -100,12 +102,27 @@ class ImageTests(unittest.TestCase):
                 "/usr/share/applications/ujwalos-gaming-setup.desktop",
             })
             self.assertNotIn("/home/", gaming_paths)
+            apps = derived / "root/image/ujwalos-apps.rpm"
+            self.assertTrue(apps.is_file())
+            self.assertEqual(subprocess.check_output(["rpm", "-qp", "--scripts", str(apps)], text=True), "")
+            app_paths = subprocess.check_output(["rpm", "-qpl", str(apps)], text=True).splitlines()
+            for expected in ("/usr/share/ujwalos/gaming-center/main.py",
+                             "/usr/share/ujwalos/phone-panel/phone_panel.py",
+                             "/usr/share/applications/ujwalos-gaming-center.desktop",
+                             "/usr/share/applications/ujwalos-phone-panel.desktop"):
+                self.assertIn(expected, app_paths)
+            self.assertTrue(all(path.startswith("/usr/share/") for path in app_paths))
+            self.assertFalse(any("__pycache__" in path or "requirements-dev" in path for path in app_paths))
+            dependencies = subprocess.check_output(["rpm", "-qpR", str(apps)], text=True)
+            for dependency in ("python3-pyside6", "qt6-qtdeclarative", "kde-connect"):
+                self.assertIn(dependency, dependencies)
             self.assertFalse((derived / "repositories/core.xml").is_symlink())
             self.assertEqual((derived / "repositories/core.xml").read_bytes(),
                              (derived / "repositories/core-nonrawhide.xml").read_bytes())
             self.assertIn("isomd5sum", (derived / "boxroot/etc/kiwi.yml.d/ujwalos.yml").read_text())
             extra = ET.parse(derived / "ujwalos-packages.xml")
-            self.assertEqual([p.get("name") for p in extra.findall("packages/package")], ["kde-connect"])
+            self.assertEqual([p.get("name") for p in extra.findall("packages/package")],
+                             ["kde-connect", "python3-pyside6", "qt6-qtdeclarative"])
             before = (derived / "config.sh").read_bytes()
             with self.assertRaises(FileExistsError):
                 prepare.prepare(derived)
@@ -114,6 +131,7 @@ class ImageTests(unittest.TestCase):
     def test_shell_syntax(self):
         for path in ("scripts/build/build-iso.sh", "scripts/build/build-branding-rpm.sh",
                      "scripts/build/build-gaming-rpm.sh", "gaming/root/usr/bin/ujwalos-gaming-setup",
+                     "scripts/build/build-apps-rpm.sh",
                      "scripts/build/generate-plymouth-prompts.sh",
                      "scripts/test/test-iso.sh"):
             subprocess.run(["bash", "-n", str(ROOT / path)], check=True)

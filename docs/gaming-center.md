@@ -41,7 +41,9 @@ read-only command availability. Qt's application config directory holds the
 profiles, and QLockFile prevents competing editor instances. Atomic replacement prevents partial JSON
 publication, but is not a privileged-state journal or a reboot-recovery claim.
 Reset changes requested profile values, not live system settings or Steam files.
-There is no helper, runtime monitoring, package or new ISO yet. System Python
+There is no helper or runtime monitoring yet. The editor is now packaged in
+`ujwalos-apps` 0.1-1 and included in the engineering ISO recorded in
+[status](status.md). System Python
 does not have PySide6; tests use a repository-local virtual environment with
 PySide6-Essentials 6.11.2. No host system packages were installed.
 

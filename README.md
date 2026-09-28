@@ -5,6 +5,15 @@ desktop layout, and opt-in Android continuity through KDE Connect.
 
 ## Current status
 
+Latest engineering ISO (includes the Stage 4/5 previews):
+`out/build-ikTd4NhE/result/UjwalOS-0.1.x86_64-44-0.iso`
+(3,788,128,256 bytes; SHA-256
+`1861207ad9ed51eab00f6d54b2ad4dcd6c9618ef6c7b86a6cc36860196880e0a`).
+Compose, checksum, ISO9660, UEFI catalog and live Plasma boot checks passed.
+Both app launchers worked in the live VM; a fresh installation of this ISO is
+not yet tested. See
+[status](docs/status.md) for separate boot and installation evidence.
+
 | Stage | Description | Status |
 |-------|-------------|--------|
 | **0 — Specification** | Architecture, image-strategy decision, security model, compatibility review, build plan | ✅ Complete |
@@ -12,7 +21,7 @@ desktop layout, and opt-in Android continuity through KDE Connect.
 | **2 — Desktop identity** | Taskbar layout, theme, wallpaper, login, boot splash | ✅ Complete |
 | 3 — Gaming foundation | Optional gaming setup; game and hardware validation | Implementation complete; testing pending |
 | 4 — Gaming Center | Qt/QML app, profiles, per-game settings | In progress: profile editor |
-| 5 — Android continuity | KDE Connect phone panel | ⬜ Not started |
+| 5 — Android continuity | KDE Connect phone panel | In progress: read-only status panel |
 | 6 — Android apps | Optional Waydroid experiment | ⬜ Not started |
 | 7 — Recovery & release | Updates, recovery, accessibility, hardware testing | ⬜ Not started |
 | 8 — Public v1.0 | Final release | ⬜ Not started |
@@ -79,8 +88,17 @@ and a Qt/QML per-game profile editor: validated settings, private atomic saves,
 fixed launch-option previews, local reset and read-only tool availability.
 All 14 repository tests and five Qt tests pass, including Qt tests at 200% scale.
 Runtime monitoring, authorized system integration and crash/reboot restoration
-are not implemented yet. No Stage 4 RPM or ISO has been built;
-the existing ISO remains the Stage 3 image. Stage 3 hardware/game gates stay open.
+are not implemented yet. The editor is now packaged in `ujwalos-apps` 0.1-1
+and included in the latest engineering ISO above. Stage 3 hardware/game gates stay open.
+
+### Stage 5 detail
+
+The [phone panel](docs/phone-panel.md) now has a read-only Qt/QML view for device
+pairing/reachability status and battery snapshots through KDE Connect's session
+bus. Refresh is explicit and does not start the service. Automated tests cover
+simulated states and failures; no real-phone compatibility is claimed. Pairing
+controls, notifications, clipboard, transfers and real-device tests remain pending.
+The panel is packaged in `ujwalos-apps` 0.1-1 and included in the latest ISO.
 
 ## Project documents
 

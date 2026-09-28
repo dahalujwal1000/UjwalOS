@@ -21,6 +21,8 @@ pass its live boot, installer and installed-boot gates; package the desktop,
 login and Plymouth identity; and pass fresh-account and update-preservation
 validation. Stage 3 optional gaming-setup implementation is complete; acceptance
 testing remains pending, including games, baseline comparisons and hardware. Stage 4 has
-started with a tested profile backend; its [requirements](gaming-center.md)
-track the pending UI, authorization, restoration and VM gates. Hardware and
+started with a tested Qt profile editor; its [requirements](gaming-center.md)
+track pending monitoring, authorization, restoration and VM gates. Stage 5 now
+has a read-only phone status panel; [phone requirements](phone-panel.md) track
+pairing, transfers, permissions and real-device acceptance. Hardware and
 release-limit reviews remain open.

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=UjwalOS Phone Panel
+Comment=View KDE Connect device and battery status
+Exec=/usr/bin/python3 -B /usr/share/ujwalos/phone-panel/phone_panel.py
+Icon=phone
+Terminal=false
+Categories=Utility;Qt;

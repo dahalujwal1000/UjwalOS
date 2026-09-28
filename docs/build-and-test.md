@@ -24,6 +24,19 @@ generated build script clears a temporary GRUB BLS path as described below.
 This is an internal engineering ISO; branding/trademark review is still required
 before publication.
 
+Current source also builds `ujwalos-apps` 0.1-1 with desktop launchers for the
+Stage 4 Gaming Center profile editor and Stage 5 read-only Phone Panel.
+`python3-pyside6` and `qt6-qtdeclarative` are explicitly resolved in the image;
+no development virtual environment is copied. The package has no scriptlets,
+autostart entries or privileged helper. Runtime acceptance of these previews
+is separate from successful image composition.
+
+Dependency names and Fedora 44 availability verified 2026-09-28 using
+[Fedora PySide6](https://packages.fedoraproject.org/pkgs/python-pyside6/python3-pyside6/index.html)
+and [Qt Declarative](https://packages.fedoraproject.org/pkgs/qt6-qtdeclarative/qt6-qtdeclarative/).
+Both list LGPL/GPL alternative licensing; retain Fedora's package notices.
+The original apps retain the project's internal-only license placeholder.
+
 ## Dependencies
 
 The inspected upstream README lists `kiwi`, `kiwi-systemdeps` and
@@ -163,7 +176,10 @@ Use the actual path printed by the successful build:
 
 ```sh
 scripts/test/test-iso.sh out/build-XXXXXXXX/result/ACTUAL-NAME.iso --check-only
-scripts/test/test-iso.sh out/build-XXXXXXXX/result/ACTUAL-NAME.iso660 signature and UEFI
+scripts/test/test-iso.sh out/build-XXXXXXXX/result/ACTUAL-NAME.iso
+```
+
+The first command checks the checksum, ISO9660 signature and UEFI
 El Torito boot entry. These checks do not establish a successful boot.
 The second creates `out/vm-XXXXXXXX/`, a 40 GiB sparse QCOW2 disk and private UEFI
 variables, then opens QEMU with 4 GiB RAM. Install only to that virtual disk.

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=UjwalOS Gaming Center
+Comment=Edit requested per-game profiles
+Exec=/usr/bin/python3 -B /usr/share/ujwalos/gaming-center/main.py
+Icon=applications-games
+Terminal=false
+Categories=Game;Settings;

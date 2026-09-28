@@ -34,6 +34,11 @@ specific operation needs it; define a narrow D-Bus/PolicyKit contract first.
 Gaming Mode must journal previous state and restore it on disable, game exit,
 crash, and reboot. Do not implement performance changes until this is tested.
 
+The Stage 5 phone status panel uses read-only user-session KDE Connect D-Bus
+queries on explicit refresh, with no service activation, phone-data persistence
+or pairing-key access. It does not yet manage pairing or transfer phone content.
+See [phone-panel.md](phone-panel.md) for the remaining privacy and acceptance gates.
+
 No custom kernel, Android runtime fork, mandatory account, cloud service,
 Waydroid integration, or broad game compatibility promise is part of v0.1.
 

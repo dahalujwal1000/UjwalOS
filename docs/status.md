@@ -1,5 +1,93 @@
 # Status and unreleased notes
 
+## 2026-09-28 - Current-apps ISO built and live-tested
+
+`scripts/build/build-iso.sh` completed in `out/build-ikTd4NhE` with wrapper
+exit 0 and guest `result/result.code` 0. The resulting ISO is
+`out/build-ikTd4NhE/result/UjwalOS-0.1.x86_64-44-0.iso`, 3,788,128,256 bytes.
+SHA-256: `1861207ad9ed51eab00f6d54b2ad4dcd6c9618ef6c7b86a6cc36860196880e0a`.
+The manifest includes `ujwalos-apps` 0.1-1.fc44, `ujwalos-branding` 0.4-1.fc44,
+`ujwalos-gaming-setup` 0.1-1.fc44, PySide6 6.11.2-1.fc44 and KDE Connect
+26.08.1-1.fc44. EROFS compression and SELinux file contexts completed.
+
+`scripts/test/test-iso.sh
+out/build-ikTd4NhE/result/UjwalOS-0.1.x86_64-44-0.iso --check-only` passed
+SHA-256, ISO9660 and UEFI catalog checks. The `--headless` invocation created
+`out/vm-bLNLCaDo` with KVM, 4 GiB RAM, two vCPUs and a private 40 GiB disk.
+That process disappeared during a session interruption. After checking that no
+QEMU process remained, `bash out/vm-bLNLCaDo/qemu-command.sh` restarted the
+same live test. The guest media check passed (`desktop.png`), branded Plasma
+booted (`live2.png`), and both packaged desktop launchers worked:
+
+- Gaming Center opened (`gaming.png`) and saved a requested GameMode profile
+  (`gaming-saved.png`). No performance mode was applied or claimed.
+- Phone Panel opened (`phone.png`). Refresh reached the real KDE Connect
+  service's empty-device result, "No devices found" (`phone-refreshed.png`).
+  This tests the empty device list only, not properties from a paired phone.
+- `rpm -q ujwalos-apps python3-pyside6 kde-connect` showed the expected versions.
+  `rpm -V ujwalos-apps` returned 0 (`rpm-verification.png`).
+
+The guest was asked to shut down via `systemctl poweroff`. This is a successful
+compose and live-session smoke test, not a fresh installation acceptance test.
+Installation of this particular ISO, real phones, game/hardware performance,
+Secure Boot and the remaining Stage 4/5 features are still untested or incomplete.
+
+## 2026-09-28 - Current-apps ISO packaging
+
+Added `ujwalos-apps` 0.1-1, containing the Stage 4 profile editor, Stage 5
+read-only phone panel and two desktop launchers. Only application files under
+`/usr/share` are installed; no scriptlets, autostart, home-directory writes or
+privileged helper. The KDE image explicitly resolves Fedora's `python3-pyside6`
+and `qt6-qtdeclarative`, with `kde-connect` already selected. Development wheels
+and virtual environments are not copied into the image.
+
+`python3 -m unittest discover -s tests/config -v`: 21 passed, including the
+real apps RPM build, dependency/file checks and generated-image integration.
+The nine offscreen Qt tests passed. Both desktop files passed
+`desktop-file-validate` (Gaming Center has a non-fatal multiple-category hint).
+`scripts/build/build-iso.sh --validate` passed in `out/build-xmJPC7Eu`.
+
+The first compose, `out/build-astc1nKz`, has no ISO. After the session interruption,
+its execution handle and builder process were absent; `result.code` is 1 and
+logs end during package downloads without an established cause. A fresh isolated
+compose was started in `out/build-ikTd4NhE`. No completion or boot is inferred
+from the package/description checks above. Build results are recorded separately.
+
+## 2026-09-28 - Stage 5 read-only phone panel started
+
+Owner requested Stage 5 while Stage 3 acceptance and Stage 4 implementation
+remain open. [Requirements and real-device gates](phone-panel.md) are recorded.
+`apps/phone-panel/` adds a user-run Qt/QML panel with explicit refresh, device
+pairing/reachability snapshots and optional battery values. The adapter uses
+KDE Connect's session D-Bus interface, bounded background queries and no service
+activation. Unknown battery remains unavailable; failed refresh clears old data.
+Names are plain text and no device IDs, pairing keys or phone content are logged
+or persisted. No host packages, firewall rules or phone settings were changed.
+
+Verification commands/results:
+
+- `python3 -m unittest discover -s tests/config -v`: 21 passed, including seven
+  phone-backend tests for read-only calls, offline/unpaired devices, malformed
+  values, path validation and missing service/plugin handling.
+- `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software
+  UJWALOS_UI_SCREENSHOTS=out/stage5-ui out/stage4-venv/bin/python
+  -m unittest discover -s tests/ui -v`: nine passed, including four phone-panel
+  tests for idle privacy, stale-data clearing, worker failure and QML rendering.
+- The Qt suite with `QT_SCALE_FACTOR=2`: nine passed.
+- `dbus-run-session -- out/stage4-venv/bin/python
+  tests/integration/test_phone_transport.py -v`: one passed. Private-bus socket
+  creation initially failed inside the sandbox; the authorized isolated-bus
+  run verified missing-service failure and no KDE Connect service activation.
+- `git diff --check`: passed. Synthetic screenshots at 720x520 and 420x340 were
+  generated; the narrow view was inspected for wrapping and plaintext names.
+
+`kdeconnect-cli --help` reports command not found on this host. No actual
+KDE Connect success path, Android device, pairing, revoke, reconnect or phone
+permission test was performed. Pairing controls, notifications, clipboard and
+file transfer remain unimplemented. No Stage 5 RPM/image was built, and no VM
+boot/install or hardware acceptance is claimed. Next verify the adapter against
+the image's KDE Connect service, then add explicit pairing and revocation.
+
 ## Stage 3 summary - implementation complete; testing pending
 
 The optional gaming-setup implementation is complete: packaged launcher,

@@ -2,5 +2,7 @@
   <!-- Fedora 44 package; pairing remains an explicit user action. -->
   <packages type="image" profiles="KDE-Desktop-Live">
     <package name="kde-connect"/>
+    <package name="python3-pyside6"/>
+    <package name="qt6-qtdeclarative"/>
   </packages>
 </image>
