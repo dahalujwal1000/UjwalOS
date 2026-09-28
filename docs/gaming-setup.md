@@ -86,3 +86,21 @@ Do not compare numbers from different GPUs, drivers, power states or scenes.
 VM tests can verify package installation, menu entry and basic diagnostics but
 do not establish physical GPU performance, hybrid GPU selection, Secure Boot
 or controller support. Record those separately in `docs/status.md`.
+
+### Controller evidence
+
+Checked 2026-09-28: Valve's [Steam Input player guide](https://partner.steamgames.com/doc/features/steam_controller/getting_started_for_players)
+describes controller detection and per-game configuration. Its screenshots can
+differ from the installed Steam client, so record the client version and actual
+setting labels. Valve also maintains [steam-devices](https://github.com/ValveSoftware/steam-devices),
+the device-access rules used by downstream distributions. A joystick node by
+itself does not verify those permissions or Steam Input.
+
+For each tested controller, record its model, firmware when available, USB or
+Bluetooth transport, Steam detection, selected per-game layout, and Steam Input
+setting. In the same scene on both systems, test both sticks, triggers, D-pad,
+face and shoulder buttons, menu navigation and rumble where supported. Unplug
+and reconnect USB, or disconnect and reconnect Bluetooth, and verify input
+returns without relaunching the game. Record unsupported features individually.
+Check detection as the normal player account; use packaged device rules when
+needed instead of broad device permissions or running Steam as root.

@@ -20,7 +20,8 @@ The source and redistribution boundary is documented in
 | Stage 3 ISO | PASS: `out/build-dXo1VHow/result/UjwalOS-0.1.x86_64-44-0.iso`, wrapper and guest exit 0, gaming RPM in manifest, media integrity passed |
 | Candidate RPM in installed VM | PASS: installed in existing Stage 2 Fedora KDE VM `out/vm-St43Uqg6`; plan/status worked and absent Steam/GameMode paths failed without installing anything |
 | Stage 3 live boot and setup | PASS: `out/vm-ck8RbgAm` reached Plasma; KDE launcher opened wizard; optional Fedora tools transaction completed in live VM |
-| Stage 3 fresh install and disk-only boot | Not tested yet |
+| Stage 3 fresh install and disk-only boot | PASS: `out/vm-m1CAtNu1`, fresh 40 GiB disk, Anaconda success, ISO detached, first-run setup and branded Plasma login; installed gaming RPM verification exit 0 |
+| Installed setup authorization cancellation | PASS: normal-account PolicyKit prompt names the fixed DNF transaction; cancellation returns to the wizard menu and optional packages remain absent |
 | Steam/Proton and game matrix | Not tested; stock Fedora KDE baseline still required |
 | Physical graphics and controller tests | Not tested |
 
@@ -62,8 +63,10 @@ PolicyKit/DNF5. DNF showed a 10-package transaction and waited for confirmation
 `mangohud` and `gamescope` with dependencies; `vulkan-tools` was already
 installed. DNF reported `Complete!` and the wizard returned to its menu
 (`stage3-tools-result.png`). Choice 5 ran `gamemoded -t`: basic checks passed,
-but its CPU-governor feature check failed because the software-emulated VM has
-no CPU governor files (`stage3-gamemode.png`). This is not a GameMode validation
+but its CPU-governor feature check failed because the VM exposes no CPU
+governor files (`stage3-gamemode.png`). Its recorded `qemu-command.sh` uses
+`-accel kvm -cpu host`; this is CPU virtualization with software-rendered
+graphics, not TCG CPU emulation. This is not a GameMode validation
 pass on physical hardware. The VM was cleanly shut down. No game was launched,
 and this live-boot test is not a fresh installation test.
 
@@ -79,6 +82,54 @@ in enabled repositories and exited 1 without adding a repository or package;
 (`stage3-optional2.png`). The VM was cleanly powered off. This verifies the
 candidate RPM on an installed guest, not its inclusion in a new ISO, a Steam
 transaction, physical GPU acceleration or real controller input.
+
+### Stage 3 fresh installation and authorization check
+
+On 2026-09-28, `scripts/test/test-iso.sh
+out/build-dXo1VHow/result/UjwalOS-0.1.x86_64-44-0.iso --headless` created
+`out/vm-m1CAtNu1` with a fresh 40 GiB private disk, 4096 MiB RAM, two virtual
+CPUs, KVM and Virtio VGA. The initial retry process disappeared before
+installation began; after confirming its process handle was missing, its
+socket refused connections and no QEMU process remained, it was restarted
+with `bash out/vm-m1CAtNu1/qemu-command.sh`. Anaconda's review screen selected
+only the Virtio disk (`review.png`). It completed the installation and showed
+"Successfully installed" (`progress8.png`). The live session shut down cleanly.
+
+`scripts/test/test-iso.sh --installed out/vm-m1CAtNu1 --headless` then booted
+the same disk with no CD-ROM in the recorded QEMU command. Plasma first-run
+setup created the disposable `stg3test` account (`setup7.png`); login reached
+the branded desktop (`installed-desktop.png`). In that account:
+
+```sh
+rpm -q ujwalos-gaming-setup ujwalos-branding
+rpm -V ujwalos-gaming-setup
+ujwalos-gaming-setup --plan
+```
+
+The versions were `ujwalos-gaming-setup-0.1-1.fc44.noarch` and
+`ujwalos-branding-0.4-1.fc44.noarch`. RPM verification returned 0 without
+reporting file differences, and the plan displayed its expected optional
+packages and launch options (`installed-rpm.png`). Running the interactive
+wizard and selecting choice 2 opened a PolicyKit password prompt naming
+`/usr/bin/dnf5 install gamemode mangohud gamescope vulkan-tools`
+(`installed-polkit.png`). Cancelling it reported that installation did not
+complete and returned to the menu (`installed-cancel.png`). After exiting the
+wizard, `rpm -q gamemode mangohud gamescope steam` confirmed all four remained
+absent (`cancel-packages.png`). The installed VM shut down via
+`systemctl poweroff`, and QEMU exited 0.
+
+The earlier attempt in `out/vm-CDsyeKOE` stopped unexpectedly at 35% of the
+software-copy stage: wrapper exit 143, empty QEMU stderr, refused QMP socket.
+Its partial disk is retained. The termination cause was not established, and
+that attempt is not counted as a successful installation. The successful
+retry above used a different disk. No physical disks or host packages changed.
+
+Controller protocol coverage was expanded from device-node detection to
+per-game mapping, rumble and reconnect checks, with Valve source links and a
+verification date in `gaming-setup.md`. Those controller tests and the actual
+game/baseline matrix remain unrun. This update changes documentation only;
+the seven passing repository tests recorded above apply to the unchanged code.
+`git diff --check` exited 0 for this documentation update.
 
 ## 2026-09-28 - Stage 2 desktop identity complete
 

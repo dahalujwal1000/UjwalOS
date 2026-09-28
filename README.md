@@ -60,8 +60,11 @@ See [current evidence](docs/status.md).
 The optional Gaming Setup RPM and KDE launcher are included in the Stage 3
 engineering ISO at `out/build-dXo1VHow/result/UjwalOS-0.1.x86_64-44-0.iso`
 (SHA-256 `b4110546036fdb87813dc35de25d447cc5e2032821278fa0ed28a1795a71855c`).
-The ISO passed media checks and reached Plasma in a VM; the launcher opened
-and installed Fedora gaming tools in that disposable live session. Steam,
+The ISO passed media checks, live boot, a fresh 40 GiB VM installation, and
+disk-only boot through first-run setup and login. The gaming RPM passed file
+verification in the installed guest, and cancelling its PolicyKit request
+returned to the menu without installing optional tools. The live-session
+launcher also installed Fedora gaming tools successfully. Steam,
 Proton and proprietary drivers are not bundled. Stage 3 is **not complete**:
 the stock Fedora KDE game matrix, Steam/Proton, real GPU and controller tests
 remain open. See the [test protocol](docs/gaming-setup.md) and
