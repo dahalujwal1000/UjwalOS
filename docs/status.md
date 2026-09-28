@@ -1,5 +1,20 @@
 # Status and unreleased notes
 
+## Stage 3 summary - implementation complete; testing pending
+
+The optional gaming-setup implementation is complete: packaged launcher,
+explicit Fedora-tools installation, optional Steam installation from an already
+enabled repository, diagnostics, ISO integration and recorded VM installation
+checks. Remaining acceptance tests are the Steam/Proton game matrix, stock
+Fedora KDE baseline comparisons, physical GPU and controller checks, and
+physical-hardware performance-tool validation. The full Stage 3 gate remains
+open until these tests pass. This status does not claim an implemented NVIDIA
+driver installer or tested compatibility. Stage 4 implementation is underway.
+
+This wording separates implementation completion from acceptance completion;
+the dated evidence and limitations below remain unchanged. Documentation-only
+update: `git diff --check` passed; no new build or runtime tests were performed.
+
 ## 2026-09-28 - Stage 4 Qt profile editor
 
 Implemented `apps/gaming-center/main.py` and `Main.qml`: unprivileged Qt/QML

@@ -10,7 +10,7 @@ desktop layout, and opt-in Android continuity through KDE Connect.
 | **0 — Specification** | Architecture, image-strategy decision, security model, compatibility review, build plan | ✅ Complete |
 | **1 — Bootable v0.1** | Fedora KDE live ISO with minimal UjwalOS branding | ✅ Complete |
 | **2 — Desktop identity** | Taskbar layout, theme, wallpaper, login, boot splash | ✅ Complete |
-| 3 — Gaming foundation | Optional setup, Steam/Proton, drivers, controllers and game matrix | 🔧 In progress |
+| 3 — Gaming foundation | Optional gaming setup; game and hardware validation | Implementation complete; testing pending |
 | 4 — Gaming Center | Qt/QML app, profiles, per-game settings | In progress: profile editor |
 | 5 — Android continuity | KDE Connect phone panel | ⬜ Not started |
 | 6 — Android apps | Optional Waydroid experiment | ⬜ Not started |
@@ -65,9 +65,11 @@ disk-only boot through first-run setup and login. The gaming RPM passed file
 verification in the installed guest, and cancelling its PolicyKit request
 returned to the menu without installing optional tools. The live-session
 launcher also installed Fedora gaming tools successfully. Steam,
-Proton and proprietary drivers are not bundled. Stage 3 is **not complete**:
-the stock Fedora KDE game matrix, Steam/Proton, real GPU and controller tests
-remain open. See the [test protocol](docs/gaming-setup.md) and
+Proton and proprietary drivers are not bundled. Stage 3's optional gaming-setup
+implementation is **complete; acceptance testing remains pending**. This does
+not claim an NVIDIA driver installer or universal game compatibility.
+The stock Fedora KDE game matrix, Steam/Proton, real GPU and controller tests
+remain open, so the full Stage 3 acceptance gate has not passed. See the [test protocol](docs/gaming-setup.md) and
 [gate evidence](docs/status.md).
 
 ### Stage 4 detail

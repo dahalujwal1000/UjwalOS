@@ -19,7 +19,8 @@ separate gate evidence and remaining release limits are in status.md.
 Completed bounded tasks: build the minimal pinned Fedora 44 KDE derivative;
 pass its live boot, installer and installed-boot gates; package the desktop,
 login and Plymouth identity; and pass fresh-account and update-preservation
-validation. Stage 3 gaming-foundation validation remains open. Stage 4 has
+validation. Stage 3 optional gaming-setup implementation is complete; acceptance
+testing remains pending, including games, baseline comparisons and hardware. Stage 4 has
 started with a tested profile backend; its [requirements](gaming-center.md)
 track the pending UI, authorization, restoration and VM gates. Hardware and
 release-limit reviews remain open.
