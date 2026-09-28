@@ -1,0 +1,94 @@
+"""User-run Qt/QML phone status panel. Refresh is explicitly requested."""
+
+import os
+from pathlib import Path
+import sys
+
+from PySide6.QtCore import QObject, Property, QThread, Signal, Slot
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtQml import QQmlApplicationEngine
+
+from backend import SessionTransport, Unavailable, snapshot
+
+
+class Refresh(QThread):
+    result = Signal(list, str)
+
+    def run(self):
+        try:
+            self.result.emit(snapshot(SessionTransport()), "")
+        except (Unavailable, TypeError, ValueError):
+            self.result.emit([], "KDE Connect unavailable. No current device status.")
+
+
+class PhonePanel(QObject):
+    changed = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self._rows = []
+        self._busy = False
+        self._message = "Not refreshed"
+        self.worker = None
+
+    @Property('QVariantList', notify=changed)
+    def devices(self):
+        return self._rows
+
+    @Property(bool, notify=changed)
+    def busy(self):
+        return self._busy
+
+    @Property(str, notify=changed)
+    def message(self):
+        return self._message
+
+    @Slot()
+    def refresh(self):
+        if self._busy:
+            return
+        self._busy = True
+        self._rows = []
+        self._message = "Refreshing"
+        self.changed.emit()
+        self.worker = Refresh(self)
+        self.worker.result.connect(self.accept)
+        self.worker.finished.connect(self.finished)
+        self.worker.start()
+
+    @Slot(list, str)
+    def accept(self, rows, error):
+        self._rows = [] if error else rows
+        self._message = error or ("Refresh complete" if rows else "No devices found")
+        self.changed.emit()
+
+    @Slot()
+    def finished(self):
+        self._busy = False
+        self.worker.deleteLater()
+        self.worker = None
+        self.changed.emit()
+
+    def shutdown(self):
+        if self.worker is not None:
+            self.worker.wait()
+
+
+def main():
+    if os.geteuid() == 0:
+        print("Run Phone Panel as your normal desktop user.", file=sys.stderr)
+        return 1
+    app = QGuiApplication(sys.argv)
+    app.setApplicationName("UjwalOS Phone Panel")
+    controller = PhonePanel()
+    engine = QQmlApplicationEngine()
+    engine.rootContext().setContextProperty("phone", controller)
+    engine.load(str(Path(__file__).with_name("Main.qml")))
+    if not engine.rootObjects():
+        return 1
+    app.aboutToQuit.connect(controller.shutdown)
+    return app.exec()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
