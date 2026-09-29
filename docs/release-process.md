@@ -1,6 +1,11 @@
 # Release process
 
-No release artifacts exist. Do not label repository scaffolding as a bootable v0.1.
+Internal engineering ISOs exist; no public release is approved. Build, live-boot
+and installation evidence is recorded separately in [status](status.md).
+
+Stage 7's [artifact verifier and recovery protocol](recovery-and-quality.md) are
+the first release-quality milestone. `scripts/release/artifacts.py` creates and
+verifies local unsigned manifests; it does not sign, upload or authorize release.
 
 Before a release candidate:
 

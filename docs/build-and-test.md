@@ -250,3 +250,10 @@ Sources inspected: the pinned upstream README, VARIANTS.md, Fedora.kiwi,
 repositories/core.xml, teams/kde.xml, components/liveinstall.xml, upstream
 kiwi-build, local KIWI 11/boxed-plugin help and implementation, and installed
 QEMU help/firmware files. See [status.md](status.md) for actual results.
+
+## Stage 7 checks
+
+The [recovery and quality protocol](recovery-and-quality.md) defines pending
+update, recovery, dual-boot, accessibility and hardware gates. Artifact integrity
+tests run with `python3 -m unittest discover -s tests/config -v`.
+No Stage 7 test should alter the host's packages, disks or boot configuration.

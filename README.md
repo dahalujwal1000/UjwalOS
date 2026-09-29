@@ -23,7 +23,7 @@ not yet tested. See
 | 4 — Gaming Center | Qt/QML app, profiles, per-game settings | In progress: profile editor |
 | 5 — Android continuity | KDE Connect phone panel | In progress: status, unpair and native pairing launcher |
 | 6 — Android apps | Optional Waydroid experiment | ⬜ Not started |
-| 7 — Recovery & release | Updates, recovery, accessibility, hardware testing | ⬜ Not started |
+| 7 — Recovery & release | Updates, recovery, accessibility, hardware testing | In progress: artifact verifier and recovery protocol |
 | 8 — Public v1.0 | Final release | ⬜ Not started |
 
 ### Stage 1 detail
@@ -104,6 +104,14 @@ identified a race with incoming requests. Notifications, clipboard, transfers an
 real-device tests remain pending. The updated RPM is `ujwalos-apps` 0.1-3; the existing ISO
 still contains the read-only 0.1-1 panel and has not been rebuilt for these controls.
 
+### Stage 7 detail
+
+Stage 7 has started with [requirements and recovery test gates](docs/recovery-and-quality.md).
+An offline engineering-artifact manifest tool records and verifies SHA-256 and
+sizes without signing, publishing or claiming release readiness. Update/recovery,
+accessibility, dual-boot and repeated hardware acceptance remain pending.
+This work does not close the unfinished Stage 3-6 gates or rebuild the ISO.
+
 ## Project documents
 
 - [Full product specification and original master prompt](plan.md)
@@ -112,6 +120,7 @@ still contains the read-only 0.1-1 panel and has not been rebuilt for these cont
 - [Security model](docs/security-model.md)
 - [Compatibility and dependency review](docs/compatibility.md)
 - [Roadmap](docs/roadmap.md) and [release process](docs/release-process.md)
+- [Recovery and release-quality protocol](docs/recovery-and-quality.md)
 - [Current status / release notes](docs/status.md)
 - [Licensing policy](LICENSES/README.md)
 

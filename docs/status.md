@@ -1,5 +1,38 @@
 # Status and unreleased notes
 
+## 2026-09-29 - Stage 7 started: artifact integrity and recovery protocol
+
+Owner authorized starting Stage 7. Added [requirements and acceptance gates](recovery-and-quality.md)
+for updates, failed-update recovery, older-kernel/rescue paths, dual-boot review,
+accessibility and repeated hardware tests. All operational gates remain pending;
+this does not complete Stages 3-6 or authorize public release.
+
+`scripts/release/artifacts.py` creates/verifies local unsigned engineering JSON
+manifests with SHA-256, size and an operator-supplied full source revision. It
+rejects duplicate fields/names, unsafe paths, malformed schemas, symlinks and
+non-regular artifacts, detects files changing during hashing, bounds memory use,
+and refuses manifest overwrite. It does not attest provenance, sign, upload,
+approve a release or prove recovery. An interrupted manifest write can leave an
+invalid manifest; the guide requires inspection and fresh staging in that case.
+
+`python3 -m unittest discover -s tests/config -v`: 35 passed, including eight new
+artifact tests for round trip, tampering/missing files, traversal, duplicates,
+revision/schema validation, symlink/FIFO refusal, overwrite protection, manifest
+size limits and CLI exit status. `git diff --check`: passed.
+
+The new `fingerprint` function was also invoked read-only via `runpy.run_path`
+against `out/build-ikTd4NhE/result/UjwalOS-0.1.x86_64-44-0.iso`. It returned
+3,788,128,256 bytes and SHA-256
+`1861207ad9ed51eab00f6d54b2ad4dcd6c9618ef6c7b86a6cc36860196880e0a`,
+matching the recorded build. No manifest was retroactively attributed to the
+current source revision for this older image.
+
+The update guidance was checked against DNF5 upstream upgrade/offline docs on
+2026-09-29. Fedora's GRUB quick-doc page was blocked during review; no unverified
+version-specific repair commands are included. No host package, disk, boot or
+service changes were made. No ISO build, VM update/recovery, accessibility or
+hardware testing was performed for this milestone.
+
 ## 2026-09-29 - Native pairing delegation safety correction
 
 Follow-up review found that KDE Connect's `requestPairing` can accept an inbound

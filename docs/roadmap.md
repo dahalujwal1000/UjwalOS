@@ -26,3 +26,8 @@ track pending monitoring, authorization, restoration and VM gates. Stage 5 now
 has a read-only phone status panel; [phone requirements](phone-panel.md) track
 pairing, transfers, permissions and real-device acceptance. Hardware and
 release-limit reviews remain open.
+
+Stage 7 started on 2026-09-29 with a local artifact integrity verifier and
+[recovery/quality protocol](recovery-and-quality.md). Recovery VM tests,
+accessibility, dual-boot review and repeated hardware tests remain pending.
+Stage 6 remains unimplemented; starting Stage 7 does not close earlier gates.
