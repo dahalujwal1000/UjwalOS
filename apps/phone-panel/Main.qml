@@ -15,14 +15,13 @@ ApplicationWindow {
         objectName: "pairingConfirmation"
         property string deviceId: ""
         property string deviceName: ""
-        property string action: ""
         anchors.centerIn: parent
         width: Math.min(window.width - 32, 440)
         implicitHeight: Math.min(window.height - 32, 300)
         modal: true
-        title: action === "pair" ? "Request pairing?" : "Revoke pairing?"
+        title: "Revoke pairing?"
         standardButtons: Dialog.Ok | Dialog.Cancel
-        onAccepted: phone.act(deviceId, action)
+        onAccepted: phone.act(deviceId, "unpair")
         contentItem: ScrollView {
             implicitHeight: Math.min(consentText.implicitHeight, window.height - 160)
             contentWidth: availableWidth
@@ -30,9 +29,8 @@ ApplicationWindow {
             Label {
                 id: consentText
                 width: confirmation.width - confirmation.leftPadding - confirmation.rightPadding
-                text: confirmation.deviceName + "\n\n" + (confirmation.action === "pair"
-                    ? "Send a KDE Connect pairing request? Compare verification codes before accepting on your phone. Pairing enables access allowed by your KDE Connect plugin settings."
-                    : "Remove this computer's trust for this device, including when it is offline?")
+                text: confirmation.deviceName
+                    + "\n\nRemove this computer's trust for this device, including when it is offline?"
                 textFormat: Text.PlainText
                 wrapMode: Text.Wrap
             }
@@ -63,6 +61,13 @@ ApplicationWindow {
             Layout.fillWidth: true
         }
         BusyIndicator { running: phone.busy; visible: running }
+        Button {
+            objectName: "openKdeConnect"
+            text: "Open KDE Connect"
+            icon.name: "kdeconnect"
+            enabled: !phone.busy && !confirmation.visible
+            onClicked: phone.openSettings()
+        }
         Label { text: "Devices at last refresh"; font.bold: true }
         ListView {
             id: devices
@@ -107,15 +112,14 @@ ApplicationWindow {
                         Layout.fillWidth: true
                     }
                     Button {
-                        text: modelData.paired ? "Unpair" : "Pair"
-                        icon.name: modelData.paired ? "edit-delete" : "list-add"
+                        text: "Unpair"
+                        visible: !!modelData.paired
+                        icon.name: "edit-delete"
                         enabled: !phone.busy && !confirmation.visible && !!modelData.id
-                            && (modelData.paired || (modelData.reachable
-                                && !modelData.requested && !modelData.incoming))
+                            && !!modelData.paired
                         onClicked: {
                             confirmation.deviceId = modelData.id
                             confirmation.deviceName = modelData.name
-                            confirmation.action = modelData.paired ? "unpair" : "pair"
                             confirmation.open()
                         }
                     }

@@ -68,20 +68,14 @@ def snapshot(call):
 def perform_action(call, identifier, action):
     """Revalidate a confirmed target. Never accept inbound pairing requests."""
     path = device_path(identifier)
-    if action not in ("pair", "unpair"):
+    if action != "unpair":
         raise Unavailable("Unsupported action")
     row = next((row for row in snapshot(call) if row["id"] == identifier), None)
     if row is None:
         raise Unavailable("Device no longer available")
-    if action == "pair":
-        if row["paired"] or not row["reachable"] or row["requested"] or row["incoming"]:
-            raise Unavailable("Device pairing state changed")
-        method = "requestPairing"
-    else:
-        if not row["paired"]:
-            raise Unavailable("Device is not paired")
-        method = "unpair"
-    call(path, DEVICE, method, [])
+    if not row["paired"]:
+        raise Unavailable("Device is not paired")
+    call(path, DEVICE, "unpair", [])
 
 
 class SessionTransport:
@@ -89,6 +83,9 @@ class SessionTransport:
         self.deadline = time.monotonic() + 8
 
     def __call__(self, path, interface, method, arguments):
+        # requestPairing may accept an inbound request racing a prior state check.
+        if interface == DEVICE and method != "unpair":
+            raise Unavailable("Pairing is managed in KDE Connect")
         from PySide6.QtDBus import QDBus, QDBusConnection, QDBusMessage, QDBusVariant
 
         remaining = self.deadline - time.monotonic()
@@ -102,7 +99,7 @@ class SessionTransport:
         if reply.type() == QDBusMessage.ErrorMessage:
             raise Unavailable("KDE Connect is unavailable or its interface could not be read")
         values = reply.arguments()
-        if interface == DEVICE and method in ("requestPairing", "unpair") and not arguments:
+        if interface == DEVICE and method == "unpair" and not arguments:
             if values:
                 raise Unavailable("Unexpected KDE Connect action reply")
             return None

@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import sys
 
-from PySide6.QtCore import QObject, Property, QThread, Signal, Slot
+from PySide6.QtCore import QObject, Property, QProcess, QThread, Signal, Slot
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
@@ -36,9 +36,7 @@ class Action(QThread):
             # A transport timeout can occur after the daemon received the request.
             self.result.emit([], "Action could not be confirmed. Refresh before retrying.")
             return
-        self.result.emit([], "Pairing request sent; pairing is not yet confirmed. Refresh for status."
-                         if self.action == "pair" else
-                         "Unpair request sent. Refresh to verify device status.")
+        self.result.emit([], "Unpair request sent. Refresh to verify device status.")
 
 
 class PhonePanel(QObject):
@@ -78,7 +76,7 @@ class PhonePanel(QObject):
 
     @Slot(str, str)
     def act(self, identifier, action):
-        if self._busy or action not in ("pair", "unpair"):
+        if self._busy or action != "unpair":
             return
         if not any(row.get("id") == identifier for row in self._rows):
             return
@@ -90,6 +88,16 @@ class PhonePanel(QObject):
         self.worker.result.connect(self.accept)
         self.worker.finished.connect(self.finished)
         self.worker.start()
+
+    @Slot()
+    def openSettings(self):
+        if self._busy:
+            return
+        started, _ = QProcess.startDetached("/usr/bin/kdeconnect-app", [])
+        self._rows = []
+        self._message = ("KDE Connect launch requested. Refresh after changing pairing."
+                         if started else "KDE Connect could not be opened.")
+        self.changed.emit()
 
     @Slot(list, str)
     def accept(self, rows, error):

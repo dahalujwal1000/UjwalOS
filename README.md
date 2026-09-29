@@ -21,7 +21,7 @@ not yet tested. See
 | **2 — Desktop identity** | Taskbar layout, theme, wallpaper, login, boot splash | ✅ Complete |
 | 3 — Gaming foundation | Optional gaming setup; game and hardware validation | Implementation complete; testing pending |
 | 4 — Gaming Center | Qt/QML app, profiles, per-game settings | In progress: profile editor |
-| 5 — Android continuity | KDE Connect phone panel | In progress: status and pairing requests |
+| 5 — Android continuity | KDE Connect phone panel | In progress: status, unpair and native pairing launcher |
 | 6 — Android apps | Optional Waydroid experiment | ⬜ Not started |
 | 7 — Recovery & release | Updates, recovery, accessibility, hardware testing | ⬜ Not started |
 | 8 — Public v1.0 | Final release | ⬜ Not started |
@@ -97,10 +97,11 @@ The [phone panel](docs/phone-panel.md) has a Qt/QML view for device
 pairing/reachability status and battery snapshots through KDE Connect's session
 bus. Refresh is explicit and does not start the service. Automated tests cover
 simulated states and failures; no real-phone compatibility is claimed. Source
-now includes confirmed pair/unpair requests, fresh state checks and public
-verification-code display for pending requests. Incoming requests and cancellation
-remain handled by KDE Connect. Notifications, clipboard, transfers and real-device
-tests remain pending. The updated RPM is `ujwalos-apps` 0.1-2; the existing ISO
+now includes confirmed unpair requests, fresh state checks, public verification-code
+display and an explicit KDE Connect launcher. Pairing, acceptance and cancellation
+use KDE Connect's UI; direct pairing calls were removed after upstream review
+identified a race with incoming requests. Notifications, clipboard, transfers and
+real-device tests remain pending. The updated RPM is `ujwalos-apps` 0.1-3; the existing ISO
 still contains the read-only 0.1-1 panel and has not been rebuilt for these controls.
 
 ## Project documents

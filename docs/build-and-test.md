@@ -24,9 +24,10 @@ generated build script clears a temporary GRUB BLS path as described below.
 This is an internal engineering ISO; branding/trademark review is still required
 before publication.
 
-Current source also builds `ujwalos-apps` 0.1-2 with desktop launchers for the
+Current source also builds `ujwalos-apps` 0.1-3 with desktop launchers for the
 Stage 4 Gaming Center profile editor and Stage 5 Phone Panel with confirmed
-pair/unpair requests. The existing ISO still contains the read-only 0.1-1 panel.
+unpair requests and an explicit native KDE Connect launcher for pairing.
+The existing ISO still contains the read-only 0.1-1 panel.
 `python3-pyside6` and `qt6-qtdeclarative` are explicitly resolved in the image;
 no development virtual environment is copied. The package has no scriptlets,
 autostart entries or privileged helper. Runtime acceptance of these previews

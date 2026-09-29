@@ -35,10 +35,19 @@ reachable devices, and missing plugins or invalid values show unavailable.
 No identifiers or phone content are written to disk. Device names are displayed
 as plain text, bounded and wrapped. The panel does not read notifications,
 clipboard, messages, pairing certificates or file contents. Device IDs stay in
-memory for stable action targeting. Pair/unpair requests require a confirmation
+memory for stable action targeting. Unpair requests require a confirmation
 dialog and recheck current state before dispatch. Offline paired devices can be
-unpaired. Pending/incoming requests cannot trigger another pair request; inbound
-acceptance and request cancellation remain in KDE Connect's own UI.
+unpaired. Pairing, inbound acceptance and request cancellation use KDE Connect's
+own UI, opened only by the explicit "Open KDE Connect" button. This launches
+`/usr/bin/kdeconnect-app` without device arguments or a shell. Launch failure is
+visible; launching the native app may activate its service. Refresh alone still
+does not activate it.
+
+Direct pairing was removed in 0.1-3: upstream `requestPairing` accepts an inbound
+request if its state is RequestedByPeer. A separate state check cannot eliminate
+that race. `cancelPairing` also changes state unconditionally. The panel therefore
+blocks direct pair/accept/cancel calls instead of claiming atomic consent checks.
+This does not establish the native app's real-phone acceptance gates.
 
 Requests are not reported as completed pairing or revocation. Refresh shows the
 daemon's current state and public verification code for pending requests; compare
@@ -46,7 +55,7 @@ codes before accepting on the phone. Transport errors have an uncertain outcome,
 so refresh before retrying. No automatic retries, plugin-setting changes or
 private-key access are added. KDE Connect owns trust and plugin permissions.
 
-The updated source packages as `ujwalos-apps` 0.1-2. The existing engineering ISO
+The updated source packages as `ujwalos-apps` 0.1-3. The existing engineering ISO
 contains the read-only 0.1-1 panel; no new image or real-phone acceptance is claimed.
 
 ## Development and verification
@@ -90,6 +99,11 @@ against the Fedora image package before packaging):
   `isPairRequestedByPeer` and `verificationKey`; matches the ISO package version.
 - [Battery plugin](https://github.com/KDE/kdeconnect-kde/blob/master/plugins/battery/batteryplugin.h):
   `hasBattery` and `charge`; unavailable charge can be negative.
+- [Pairing handler v26.08.1](https://github.com/KDE/kdeconnect-kde/blob/v26.08.1/core/backends/pairinghandler.cpp):
+  checked 2026-09-29; request/accept behavior and unconditional cancellation state
+  mutation require native pairing delegation, not separate check-then-call logic.
+- [Native app desktop entry](https://github.com/KDE/kdeconnect-kde/blob/master/app/org.kde.kdeconnect.app.desktop):
+  `kdeconnect-app` launch command verified 2026-09-29.
 - [CLI implementation](https://github.com/KDE/kdeconnect-kde/blob/master/cli/kdeconnect-cli.cpp):
   service and object naming and separate pairing/transfer operations.
 

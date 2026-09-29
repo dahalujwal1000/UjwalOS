@@ -38,11 +38,11 @@ class PhonePanelTests(unittest.TestCase):
     def test_action_target_and_busy_guard(self):
         panel = PhonePanel()
         with patch("phone_panel.perform_action") as action:
-            panel.act("unknown", "pair")
+            panel.act("unknown", "unpair")
             action.assert_not_called()
             panel.accept([{"id": "test_device"}], "")
-            panel.act("test_device", "pair")
-            panel.act("test_device", "pair")
+            panel.act("test_device", "unpair")
+            panel.act("test_device", "unpair")
             for _ in range(100):
                 QTest.qWait(10)
                 if not panel.busy:
@@ -51,7 +51,28 @@ class PhonePanelTests(unittest.TestCase):
             self.assertFalse(panel.busy)
             self.assertEqual(action.call_count, 1)
             self.assertEqual(panel.devices, [])
-            self.assertIn("not yet confirmed", panel.message)
+            self.assertIn("Refresh to verify", panel.message)
+
+    def test_direct_pairing_cannot_start_worker(self):
+        panel = PhonePanel()
+        panel.accept([{"id": "test_device"}], "")
+        with patch("phone_panel.Action") as worker:
+            for action in ("pair", "acceptPairing", "cancelPairing"):
+                panel.act("test_device", action)
+            worker.assert_not_called()
+
+    def test_native_settings_launch_and_failure(self):
+        for started in (True, False):
+            panel = PhonePanel()
+            panel.accept([{"id": "old"}], "")
+            with patch("phone_panel.QProcess.startDetached", return_value=(started, 123)) as launch:
+                panel.openSettings()
+                launch.assert_called_once_with("/usr/bin/kdeconnect-app", [])
+                self.assertEqual(panel.devices, [])
+                self.assertIn("launch requested" if started else "could not be opened", panel.message)
+                panel._busy = True
+                panel.openSettings()
+                self.assertEqual(launch.call_count, 1)
 
     def test_action_failure_does_not_claim_success(self):
         panel = PhonePanel()
@@ -111,7 +132,6 @@ class PhonePanelTests(unittest.TestCase):
         self.assertIsNotNone(dialog)
         dialog.setProperty("deviceId", "test_device")
         dialog.setProperty("deviceName", "Test phone")
-        dialog.setProperty("action", "pair")
         with patch.object(panel, "act") as action:
             QMetaObject.invokeMethod(dialog, "open", Qt.DirectConnection)
             QTest.qWait(50)
@@ -131,7 +151,12 @@ class PhonePanelTests(unittest.TestCase):
                     break
             panel.shutdown()
             action.assert_called_once()
-            self.assertEqual(action.call_args.args[1:], ("test_device", "pair"))
+            self.assertEqual(action.call_args.args[1:], ("test_device", "unpair"))
+        with patch("phone_panel.QProcess.startDetached", return_value=(True, 123)) as launch:
+            button = window.findChild(QObject, "openKdeConnect")
+            self.assertIsNotNone(button)
+            QMetaObject.invokeMethod(button, "clicked", Qt.DirectConnection)
+            launch.assert_called_once_with("/usr/bin/kdeconnect-app", [])
         panel.accept([], "KDE Connect unavailable")
         QTest.qWait(50)
         self.assertEqual(warnings, [])

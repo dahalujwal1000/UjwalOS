@@ -1,5 +1,41 @@
 # Status and unreleased notes
 
+## 2026-09-29 - Native pairing delegation safety correction
+
+Follow-up review found that KDE Connect's `requestPairing` can accept an inbound
+request that arrives after our state check. The previous 0.1-2 implementation
+therefore could not guarantee its claimed inbound-acceptance boundary. Direct
+pair/accept/cancel calls are now blocked; the panel explicitly opens KDE Connect's
+native UI instead. `cancelPairing` also changes state unconditionally, so the
+planned direct cancel/reject controls were not added. Native UI behavior still
+requires real-phone testing; this change removes our extra check-then-call path.
+
+The fixed-command launcher uses no shell or device arguments, reports launch
+failure, and clears stale rows. Refresh alone remains non-activating; explicitly
+opening KDE Connect may activate its service. Confirmed, revalidated online or
+offline unpair requests remain available. `ujwalos-apps` is now 0.1-3.
+
+Verification commands/results:
+
+- `python3 -m unittest discover -s tests/config -v`: 27 passed, including
+  RPM build checks and blocking direct pairing before any D-Bus import/call.
+- `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software
+  out/stage4-venv/bin/python -m unittest discover -s tests/ui -v`: 13 passed;
+  also 13 passed with `QT_SCALE_FACTOR=2`. Launcher success/failure is mocked;
+  no host service or phone was activated. UI tests exercise the launcher button,
+  unpair consent, busy guards and refusal of direct pairing workers.
+- `dbus-run-session -- out/stage4-venv/bin/python
+  tests/integration/test_phone_transport.py -v`: two passed on a private bus,
+  including a synthetic paired-to-unpaired transition and unknown-property error.
+- `git diff --check`: passed. Narrow 200% screenshot inspected in
+  `out/stage5-native-ui-2x/phone-420.png`.
+
+Source verification on 2026-09-29:
+[v26.08.1 pairing handler](https://github.com/KDE/kdeconnect-kde/blob/v26.08.1/core/backends/pairinghandler.cpp)
+and [native app launcher](https://github.com/KDE/kdeconnect-kde/blob/master/app/org.kde.kdeconnect.app.desktop).
+No new ISO, VM or hardware test was run. The existing ISO still contains 0.1-1;
+Stage 5 and remaining Stage 3/4 gates are not complete.
+
 ## 2026-09-29 - Stage 5 pairing-request controls
 
 Added explicit pair/unpair confirmation dialogs and fresh device-state checks.

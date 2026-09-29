@@ -36,16 +36,18 @@ class MissingServiceTests(unittest.TestCase):
             row = snapshot(SessionTransport())[0]
             self.assertEqual(row["name"], "Synthetic phone")
             self.assertFalse(row["requested"])
-            perform_action(SessionTransport(), "test_device", "pair")
+            self.assertTrue(row["paired"])
+            perform_action(SessionTransport(), "test_device", "unpair")
             row = snapshot(SessionTransport())[0]
-            self.assertTrue(row["requested"])
+            self.assertFalse(row["requested"])
             self.assertFalse(row["paired"])
-            self.assertEqual(row["verification"], "ABCD 1234")
             # Exercise void unmarshalling separately from the state guard.
             self.assertIsNone(SessionTransport()(device_path("test_device"), DEVICE, "unpair", []))
             self.assertFalse(snapshot(SessionTransport())[0]["requested"])
             with self.assertRaises(Unavailable):
-                SessionTransport()(device_path("test_device"), DEVICE, "unknownMethod", [])
+                SessionTransport()(device_path("test_device"),
+                                   "org.freedesktop.DBus.Properties", "Get",
+                                   [DEVICE, "unknownProperty"])
         finally:
             process.terminate()
             process.wait(timeout=5)

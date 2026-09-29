@@ -17,7 +17,7 @@ class PhoneBackendTests(unittest.TestCase):
             calls.append((path, interface, method, args))
             if method == "devices":
                 return ["test_device"]
-            if method in ("requestPairing", "unpair"):
+            if method == "unpair":
                 return None
             return {"name": "Test phone", "isPaired": paired,
                     "isPairRequested": requested, "isPairRequestedByPeer": incoming,
@@ -39,11 +39,18 @@ class PhoneBackendTests(unittest.TestCase):
             self.assertEqual(backend.snapshot(call)[0]["battery"], "Unavailable")
             self.assertEqual(len(calls), 6)
 
-    def test_pair_request_is_explicit_and_never_accepts(self):
+    def test_direct_pairing_actions_are_refused_before_queries(self):
         call, calls = self.transport(paired=False)
-        backend.perform_action(call, "test_device", "pair")
-        self.assertEqual(calls[-1], (backend.device_path("test_device"),
-                                    backend.DEVICE, "requestPairing", []))
+        for action in ("pair", "acceptPairing", "cancelPairing"):
+            with self.assertRaises(backend.Unavailable):
+                backend.perform_action(call, "test_device", action)
+        self.assertEqual(calls, [])
+
+    def test_transport_blocks_direct_pairing_before_dbus_import(self):
+        for method in ("requestPairing", "acceptPairing", "cancelPairing"):
+            with self.assertRaises(backend.Unavailable):
+                backend.SessionTransport()(backend.device_path("test_device"),
+                                           backend.DEVICE, method, [])
 
     def test_stale_and_pending_pair_requests_are_rejected(self):
         for settings in ({}, {"paired": False, "reachable": False},

@@ -15,22 +15,18 @@ class Daemon(QObject):
 class Device(QObject):
     def __init__(self):
         super().__init__()
-        self.requested = False
+        self.paired = True
 
     name = Property(str, lambda self: "Synthetic phone")
-    isPaired = Property(bool, lambda self: False)
+    isPaired = Property(bool, lambda self: self.paired)
     isReachable = Property(bool, lambda self: True)
-    isPairRequested = Property(bool, lambda self: self.requested)
+    isPairRequested = Property(bool, lambda self: False)
     isPairRequestedByPeer = Property(bool, lambda self: False)
     verificationKey = Property(str, lambda self: "ABCD 1234")
 
     @Slot()
-    def requestPairing(self):
-        self.requested = True
-
-    @Slot()
     def unpair(self):
-        self.requested = False
+        self.paired = False
 
 
 if __name__ == "__main__":
