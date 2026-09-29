@@ -1,4 +1,4 @@
-"""Read-only KDE Connect snapshot; never log device data or activate services."""
+"""Explicit KDE Connect operations; never log device data or activate services."""
 
 import re
 import time
@@ -35,8 +35,18 @@ def snapshot(call):
         name = get(DEVICE, "name")
         paired = get(DEVICE, "isPaired")
         reachable = get(DEVICE, "isReachable")
+        requested = get(DEVICE, "isPairRequested")
+        incoming = get(DEVICE, "isPairRequestedByPeer")
         if not isinstance(name, str) or type(paired) is not bool or type(reachable) is not bool:
             raise Unavailable("Unexpected KDE Connect device properties")
+        if type(requested) is not bool or type(incoming) is not bool:
+            raise Unavailable("Unexpected KDE Connect pairing state")
+        verification = ""
+        if requested or incoming:
+            verification = get(DEVICE, "verificationKey")
+            if (not isinstance(verification, str) or len(verification) > 512
+                    or any(not c.isprintable() for c in verification)):
+                raise Unavailable("Unexpected verification code")
         battery = "Unavailable"
         if paired and reachable:
             try:
@@ -48,9 +58,30 @@ def snapshot(call):
                 pass
         # Names are untrusted display text, never a rich-text document or a path.
         name = "".join(c for c in name if c.isprintable())[:160] or "Unnamed device"
-        rows.append({"name": name, "paired": paired, "reachable": reachable,
-                     "battery": battery})
+        rows.append({"id": identifier, "name": name, "paired": paired,
+                     "reachable": reachable, "battery": battery,
+                     "requested": requested, "incoming": incoming,
+                     "verification": verification})
     return sorted(rows, key=lambda row: row["name"].casefold())
+
+
+def perform_action(call, identifier, action):
+    """Revalidate a confirmed target. Never accept inbound pairing requests."""
+    path = device_path(identifier)
+    if action not in ("pair", "unpair"):
+        raise Unavailable("Unsupported action")
+    row = next((row for row in snapshot(call) if row["id"] == identifier), None)
+    if row is None:
+        raise Unavailable("Device no longer available")
+    if action == "pair":
+        if row["paired"] or not row["reachable"] or row["requested"] or row["incoming"]:
+            raise Unavailable("Device pairing state changed")
+        method = "requestPairing"
+    else:
+        if not row["paired"]:
+            raise Unavailable("Device is not paired")
+        method = "unpair"
+    call(path, DEVICE, method, [])
 
 
 class SessionTransport:
@@ -71,6 +102,10 @@ class SessionTransport:
         if reply.type() == QDBusMessage.ErrorMessage:
             raise Unavailable("KDE Connect is unavailable or its interface could not be read")
         values = reply.arguments()
+        if interface == DEVICE and method in ("requestPairing", "unpair") and not arguments:
+            if values:
+                raise Unavailable("Unexpected KDE Connect action reply")
+            return None
         if len(values) != 1:
             raise Unavailable("Unexpected KDE Connect reply")
         value = values[0]

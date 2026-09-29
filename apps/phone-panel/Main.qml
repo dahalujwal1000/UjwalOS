@@ -3,12 +3,41 @@ import QtQuick.Controls
 import QtQuick.Layouts
 
 ApplicationWindow {
+    id: window
     visible: true
     width: 720
     height: 520
     minimumWidth: 420
     minimumHeight: 340
     title: "UjwalOS Phone Panel"
+    Dialog {
+        id: confirmation
+        objectName: "pairingConfirmation"
+        property string deviceId: ""
+        property string deviceName: ""
+        property string action: ""
+        anchors.centerIn: parent
+        width: Math.min(window.width - 32, 440)
+        implicitHeight: Math.min(window.height - 32, 300)
+        modal: true
+        title: action === "pair" ? "Request pairing?" : "Revoke pairing?"
+        standardButtons: Dialog.Ok | Dialog.Cancel
+        onAccepted: phone.act(deviceId, action)
+        contentItem: ScrollView {
+            implicitHeight: Math.min(consentText.implicitHeight, window.height - 160)
+            contentWidth: availableWidth
+            clip: true
+            Label {
+                id: consentText
+                width: confirmation.width - confirmation.leftPadding - confirmation.rightPadding
+                text: confirmation.deviceName + "\n\n" + (confirmation.action === "pair"
+                    ? "Send a KDE Connect pairing request? Compare verification codes before accepting on your phone. Pairing enables access allowed by your KDE Connect plugin settings."
+                    : "Remove this computer's trust for this device, including when it is offline?")
+                textFormat: Text.PlainText
+                wrapMode: Text.Wrap
+            }
+        }
+    }
     header: ToolBar {
         RowLayout {
             anchors.fill: parent
@@ -18,7 +47,7 @@ ApplicationWindow {
             Button {
                 text: "Refresh"
                 icon.name: "view-refresh"
-                enabled: !phone.busy
+                enabled: !phone.busy && !confirmation.visible
                 onClicked: phone.refresh()
             }
         }
@@ -63,6 +92,33 @@ ApplicationWindow {
                         Layout.fillWidth: true
                     }
                     Label { text: "Battery: " + modelData.battery }
+                    Label {
+                        visible: !!modelData.requested || !!modelData.incoming
+                        text: modelData.incoming ? "Incoming request: review in KDE Connect"
+                                                 : "Pairing request pending"
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                    }
+                    Label {
+                        visible: !!modelData.verification
+                        text: "Verification code: " + (modelData.verification || "")
+                        textFormat: Text.PlainText
+                        wrapMode: Text.WrapAnywhere
+                        Layout.fillWidth: true
+                    }
+                    Button {
+                        text: modelData.paired ? "Unpair" : "Pair"
+                        icon.name: modelData.paired ? "edit-delete" : "list-add"
+                        enabled: !phone.busy && !confirmation.visible && !!modelData.id
+                            && (modelData.paired || (modelData.reachable
+                                && !modelData.requested && !modelData.incoming))
+                        onClicked: {
+                            confirmation.deviceId = modelData.id
+                            confirmation.deviceName = modelData.name
+                            confirmation.action = modelData.paired ? "unpair" : "pair"
+                            confirmation.open()
+                        }
+                    }
                 }
                 Accessible.name: modelData.name
             }

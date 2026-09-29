@@ -1,5 +1,39 @@
 # Status and unreleased notes
 
+## 2026-09-29 - Stage 5 pairing-request controls
+
+Added explicit pair/unpair confirmation dialogs and fresh device-state checks.
+Offline paired devices can request revocation. Pending or inbound requests block
+new pair requests; inbound acceptance and cancellation remain in KDE Connect.
+The panel displays public verification codes for pending requests and does not
+read private keys, change plugin settings, persist identifiers or activate the
+service. A sent request is not reported as completed pairing or revocation;
+transport failures require a refresh before retrying.
+
+`ujwalos-apps` release is now 0.1-2. The existing ISO remains 0.1-1 and has not
+been rebuilt. Real-phone acceptance, new-package live/installed testing and
+Stage 3/4 outstanding gates remain open. No host or phone settings were changed.
+
+Verification:
+
+- `python3 -m unittest discover -s tests/config -v`: 26 passed, including
+  the RPM build/integration checks and five new pairing backend tests.
+- `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software
+  out/stage4-venv/bin/python -m unittest discover -s tests/ui -v`: 11 passed.
+  Repeated with `QT_SCALE_FACTOR=2`: 11 passed. Coverage includes confirmation
+  cancellation/acceptance, duplicate-action prevention and uncertain failures.
+  A dialog implicit-height binding warning was fixed before the passing runs.
+- `dbus-run-session -- out/stage4-venv/bin/python
+  tests/integration/test_phone_transport.py -v`: two passed on an isolated bus.
+  Synthetic populated-service tests exercise real Qt property decoding, void
+  method replies and unknown-method errors; they do not establish real-phone
+  compatibility. Missing-service tests verify no activation.
+- Synthetic screenshots in `out/stage5-pairing-ui-2x/` include narrow-window
+  confirmation rendering at 200% scale; manually inspected.
+
+Interface evidence: [KDE Connect v26.08.1 device header](https://github.com/KDE/kdeconnect-kde/blob/v26.08.1/core/device.h),
+checked 2026-09-28. This is the version packaged in the existing image.
+
 ## 2026-09-28 - Current-apps ISO built and live-tested
 
 `scripts/build/build-iso.sh` completed in `out/build-ikTd4NhE` with wrapper

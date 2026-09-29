@@ -1,6 +1,6 @@
 Name:           ujwalos-apps
 Version:        0.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        UjwalOS development Gaming Center and Phone Panel
 License:        LicenseRef-UjwalOS-Internal
 BuildArch:      noarch
@@ -10,9 +10,9 @@ Requires:       qt6-qtdeclarative
 Requires:       kde-connect
 
 %description
-Unprivileged Qt/QML gaming profile editor and read-only KDE Connect status
-panel. These engineering previews do not apply performance settings or manage
-phone pairing. No autostart service or privileged helper is installed.
+Unprivileged Qt/QML gaming profile editor and KDE Connect status panel with
+confirmed pairing and unpair requests. These engineering previews do not apply
+performance settings. No autostart service or privileged helper is installed.
 
 %prep
 

@@ -8,7 +8,7 @@ from PySide6.QtCore import QObject, Property, QThread, Signal, Slot
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine
 
-from backend import SessionTransport, Unavailable, snapshot
+from backend import SessionTransport, Unavailable, snapshot, perform_action
 
 
 class Refresh(QThread):
@@ -19,6 +19,26 @@ class Refresh(QThread):
             self.result.emit(snapshot(SessionTransport()), "")
         except (Unavailable, TypeError, ValueError):
             self.result.emit([], "KDE Connect unavailable. No current device status.")
+
+
+class Action(QThread):
+    result = Signal(list, str)
+
+    def __init__(self, identifier, action, parent):
+        super().__init__(parent)
+        self.identifier = identifier
+        self.action = action
+
+    def run(self):
+        try:
+            perform_action(SessionTransport(), self.identifier, self.action)
+        except (Unavailable, TypeError, ValueError):
+            # A transport timeout can occur after the daemon received the request.
+            self.result.emit([], "Action could not be confirmed. Refresh before retrying.")
+            return
+        self.result.emit([], "Pairing request sent; pairing is not yet confirmed. Refresh for status."
+                         if self.action == "pair" else
+                         "Unpair request sent. Refresh to verify device status.")
 
 
 class PhonePanel(QObject):
@@ -52,6 +72,21 @@ class PhonePanel(QObject):
         self._message = "Refreshing"
         self.changed.emit()
         self.worker = Refresh(self)
+        self.worker.result.connect(self.accept)
+        self.worker.finished.connect(self.finished)
+        self.worker.start()
+
+    @Slot(str, str)
+    def act(self, identifier, action):
+        if self._busy or action not in ("pair", "unpair"):
+            return
+        if not any(row.get("id") == identifier for row in self._rows):
+            return
+        self._busy = True
+        self._rows = []
+        self._message = "Checking current device state"
+        self.changed.emit()
+        self.worker = Action(identifier, action, self)
         self.worker.result.connect(self.accept)
         self.worker.finished.connect(self.finished)
         self.worker.start()

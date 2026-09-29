@@ -22,9 +22,9 @@ without a new phone protocol, mandatory account, cloud relay or privileged UI.
 6. Package, integrate into an image, and verify both live and installed sessions.
    Report code, package, image, VM and real-device tests separately.
 
-## First milestone implemented
+## Implemented milestones
 
-`apps/phone-panel/` contains a read-only Qt/QML status panel. Refresh explicitly
+`apps/phone-panel/` contains a Qt/QML status panel. Refresh explicitly
 queries the already-running KDE Connect service on the user session bus. It
 does not activate that service or trigger network rediscovery. Device status and
 battery are snapshots labelled as such, not continuous monitoring. Work runs on
@@ -34,11 +34,20 @@ reachable devices, and missing plugins or invalid values show unavailable.
 
 No identifiers or phone content are written to disk. Device names are displayed
 as plain text, bounded and wrapped. The panel does not read notifications,
-clipboard, messages, pairing certificates or file contents. No pairing/unpairing,
-transfer or plugin-permission controls are implemented yet. KDE Connect's own
-existing settings are untouched. The panel is now included in `ujwalos-apps`
-0.1-1 and the engineering ISO recorded in [status](status.md); this does not
-establish real-phone acceptance.
+clipboard, messages, pairing certificates or file contents. Device IDs stay in
+memory for stable action targeting. Pair/unpair requests require a confirmation
+dialog and recheck current state before dispatch. Offline paired devices can be
+unpaired. Pending/incoming requests cannot trigger another pair request; inbound
+acceptance and request cancellation remain in KDE Connect's own UI.
+
+Requests are not reported as completed pairing or revocation. Refresh shows the
+daemon's current state and public verification code for pending requests; compare
+codes before accepting on the phone. Transport errors have an uncertain outcome,
+so refresh before retrying. No automatic retries, plugin-setting changes or
+private-key access are added. KDE Connect owns trust and plugin permissions.
+
+The updated source packages as `ujwalos-apps` 0.1-2. The existing engineering ISO
+contains the read-only 0.1-1 panel; no new image or real-phone acceptance is claimed.
 
 ## Development and verification
 
@@ -59,11 +68,13 @@ Stage 4 development pins, not Fedora packaging clearance.
 
 KDE Connect is absent on this development host. Mocked transport tests establish
 local handling, not compatibility with the image's actual KDE Connect version.
-The private-bus test verifies real Qt D-Bus missing-service handling without
-activation. The current-apps live ISO also passed launch and refresh to the real
+The private-bus tests verify real Qt D-Bus missing-service handling without
+activation, plus a synthetic populated service, properties and void action replies.
+This fixture is not a real KDE Connect compatibility test.
+The current-apps live ISO also passed launch and refresh to the real
 KDE Connect empty-device result in Plasma. Device properties, real-phone tests
-and broader Plasma/Wayland acceptance remain pending. Next verify the populated
-service contract before adding pairing and consent-bearing transfers.
+and broader Plasma/Wayland acceptance remain pending. Next test pairing/rejection,
+offline revocation and reconnect against real KDE Connect and an Android phone.
 
 ## Upstream interfaces
 
@@ -74,6 +85,9 @@ against the Fedora image package before packaging):
   `devices(bool, bool)` on `org.kde.kdeconnect.daemon`.
 - [Device](https://github.com/KDE/kdeconnect-kde/blob/master/core/device.h):
   `name`, `isPaired`, `isReachable`; per-device object paths.
+- [Device v26.08.1](https://github.com/KDE/kdeconnect-kde/blob/v26.08.1/core/device.h):
+  checked 2026-09-28 for `requestPairing`, `unpair`, `isPairRequested`,
+  `isPairRequestedByPeer` and `verificationKey`; matches the ISO package version.
 - [Battery plugin](https://github.com/KDE/kdeconnect-kde/blob/master/plugins/battery/batteryplugin.h):
   `hasBattery` and `charge`; unavailable charge can be negative.
 - [CLI implementation](https://github.com/KDE/kdeconnect-kde/blob/master/cli/kdeconnect-cli.cpp):

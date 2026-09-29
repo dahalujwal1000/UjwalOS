@@ -36,7 +36,10 @@ crash, and reboot. Do not implement performance changes until this is tested.
 
 The Stage 5 phone status panel uses read-only user-session KDE Connect D-Bus
 queries on explicit refresh, with no service activation, phone-data persistence
-or pairing-key access. It does not yet manage pairing or transfer phone content.
+or private pairing-key access. Explicit, confirmed pair/unpair requests are
+revalidated before dispatch. KDE Connect owns trust; the panel displays public
+verification codes for pending requests and never accepts inbound requests.
+It does not transfer phone content.
 See [phone-panel.md](phone-panel.md) for the remaining privacy and acceptance gates.
 
 No custom kernel, Android runtime fork, mandatory account, cloud service,
