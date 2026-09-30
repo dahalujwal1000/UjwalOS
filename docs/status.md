@@ -1,5 +1,56 @@
 # Status and unreleased notes
 
+## 2026-09-30 - Current ISO verified; owner phone-link test passed
+
+The owner reports basic phone linking works: PASS (owner-tested). Exact phone,
+Android version, image and feature coverage were not provided. Mark this bounded
+test done, not all Stage 5 features or revocation/permission/multi-user gates.
+
+The requested fresh ISO was composed on 2026-09-29 from source commit
+`0054c00423b5cf81d01d1846ec1273695fd37f21`:
+`out/build-9BaEqZ1c/result/UjwalOS-0.1.x86_64-44-0.iso`.
+Size: 3,788,185,600 bytes. SHA-256:
+`c1d38ba327802c95b6fc00ad8f5dfc8e6a00de43a6eca1cf037f49ec2c760563`.
+Both wrapper `exit-code` and guest `result/result.code` are 0. SELinux contexts
+and LZMA EROFS compose completed. The package manifest confirms `ujwalos-apps`
+0.1-3.fc44, KDE Connect 26.08.1-1.fc44 and PySide6 6.11.2-1.fc44.
+
+Verification commands/results:
+
+- `python3 -m unittest discover -s tests/config -v`: 35 passed before compose.
+- `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software
+  out/stage4-venv/bin/python -m unittest discover -s tests/ui -v`: 13 passed.
+- `scripts/build/build-iso.sh`: passed in `out/build-9BaEqZ1c`.
+  Earlier `out/build-mOvX2Zty` failed repository preflight with curl exit 28;
+  `out/build-UaG8r8M0` disappeared during interruption with no ISO. Logs retained.
+- `scripts/test/test-iso.sh
+  out/build-9BaEqZ1c/result/UjwalOS-0.1.x86_64-44-0.iso --check-only`: passed
+  SHA-256, ISO9660 and UEFI boot catalog. Compose reports hybrid MBR/GPT layout.
+- `python3 scripts/release/artifacts.py create out/build-9BaEqZ1c/result
+  --revision 0054c00423b5cf81d01d1846ec1273695fd37f21
+  --artifact UjwalOS-0.1.x86_64-44-0.iso
+  --artifact UjwalOS-0.1.x86_64-44-0.packages`: passed.
+  `python3 scripts/release/artifacts.py verify out/build-9BaEqZ1c/result`:
+  passed, including a repeat on 2026-09-30. Manifest is unsigned engineering data.
+- `scripts/test/test-iso.sh
+  out/build-9BaEqZ1c/result/UjwalOS-0.1.x86_64-44-0.iso --headless`: created
+  `out/vm-XD4lUSCr`, KVM/UEFI, 4 GiB, two vCPUs, private 40 GiB virtual disk.
+  Branded Plasma reached (`boot.png`); updated Phone Panel opened (`phone.png`).
+  After interruption and checking no QEMU remained, restarted with
+  `bash out/vm-XD4lUSCr/qemu-command.sh`. Plasma booted again (`resumed.png`).
+  Phone Panel's Open KDE Connect button opened the actual native app
+  (`native-kdeconnect.png`); Refresh returned "No devices found"
+  (`phone-refreshed.png`). No real phones were paired in this isolated test.
+  Guest shutdown was requested through its launcher with `systemctl poweroff`;
+  a subsequent process check confirmed no QEMU remained. `git diff --check` passed.
+
+Known live GRUB syntax warnings remain in serial output despite successful boot.
+Fresh installation/disk-only boot of this particular ISO, physical USB boot,
+Secure Boot, hardware gaming and Windows/Fedora/UjwalOS triple boot are NOT
+validated. Shared EFI-partition coexistence requires separate review because
+installed Fedora identity is retained. No host partitions, boot entries, packages
+or USB devices were altered. This is a local engineering image, not a public release.
+
 ## 2026-09-29 - Stage 7 started: artifact integrity and recovery protocol
 
 Owner authorized starting Stage 7. Added [requirements and acceptance gates](recovery-and-quality.md)

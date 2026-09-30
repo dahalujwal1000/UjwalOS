@@ -55,8 +55,18 @@ codes before accepting on the phone. Transport errors have an uncertain outcome,
 so refresh before retrying. No automatic retries, plugin-setting changes or
 private-key access are added. KDE Connect owns trust and plugin permissions.
 
-The updated source packages as `ujwalos-apps` 0.1-3. The existing engineering ISO
-contains the read-only 0.1-1 panel; no new image or real-phone acceptance is claimed.
+The updated source packages as `ujwalos-apps` 0.1-3 and is included in the new
+engineering ISO under `out/build-9BaEqZ1c/result/`. The panel opened in its live
+VM session. Broader real-phone and fresh installed-session acceptance remain pending.
+
+## Owner acceptance
+
+2026-09-30: the owner reported that phone linking works and requested it be marked
+done. Basic phone linking is PASS (owner-tested). Phone model, Android version,
+exact image and tested features were not supplied; this is not an independently
+reproduced test or a pass for all Stage 5 requirements. Notification/clipboard/file
+transfer integration, offline revocation, reconnect/reboot, permission changes
+and multi-user isolation remain unconfirmed.
 
 ## Development and verification
 
@@ -81,8 +91,9 @@ The private-bus tests verify real Qt D-Bus missing-service handling without
 activation, plus a synthetic populated service, properties and void action replies.
 This fixture is not a real KDE Connect compatibility test.
 The current-apps live ISO also passed launch and refresh to the real
-KDE Connect empty-device result in Plasma. Device properties, real-phone tests
-and broader Plasma/Wayland acceptance remain pending. Next test pairing/rejection,
+KDE Connect empty-device result in Plasma. Beyond the owner's basic phone-link
+result, device properties and broader Plasma/Wayland acceptance remain pending.
+Next test pairing/rejection,
 offline revocation and reconnect against real KDE Connect and an Android phone.
 
 ## Upstream interfaces

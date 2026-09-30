@@ -6,12 +6,14 @@ desktop layout, and opt-in Android continuity through KDE Connect.
 ## Current status
 
 Latest engineering ISO (includes the Stage 4/5 previews):
-`out/build-ikTd4NhE/result/UjwalOS-0.1.x86_64-44-0.iso`
-(3,788,128,256 bytes; SHA-256
-`1861207ad9ed51eab00f6d54b2ad4dcd6c9618ef6c7b86a6cc36860196880e0a`).
+`out/build-9BaEqZ1c/result/UjwalOS-0.1.x86_64-44-0.iso`
+(3,788,185,600 bytes; SHA-256
+`c1d38ba327802c95b6fc00ad8f5dfc8e6a00de43a6eca1cf037f49ec2c760563`).
 Compose, checksum, ISO9660, UEFI catalog and live Plasma boot checks passed.
-Both app launchers worked in the live VM; a fresh installation of this ISO is
-not yet tested. See
+The updated Phone Panel opened in the live VM; a fresh installation of this ISO
+is not yet tested. Triple boot with Windows and Fedora, shared EFI-partition
+coexistence, hardware and Secure Boot are not validated. Test the live USB first;
+do not erase existing systems or assume this image is triple-boot certified. See
 [status](docs/status.md) for separate boot and installation evidence.
 
 | Stage | Description | Status |
@@ -21,7 +23,7 @@ not yet tested. See
 | **2 — Desktop identity** | Taskbar layout, theme, wallpaper, login, boot splash | ✅ Complete |
 | 3 — Gaming foundation | Optional gaming setup; game and hardware validation | Implementation complete; testing pending |
 | 4 — Gaming Center | Qt/QML app, profiles, per-game settings | In progress: profile editor |
-| 5 — Android continuity | KDE Connect phone panel | In progress: status, unpair and native pairing launcher |
+| 5 — Android continuity | KDE Connect phone panel | Basic phone link passed (owner-tested); remaining features/gates open |
 | 6 — Android apps | Optional Waydroid experiment | ⬜ Not started |
 | 7 — Recovery & release | Updates, recovery, accessibility, hardware testing | In progress: artifact verifier and recovery protocol |
 | 8 — Public v1.0 | Final release | ⬜ Not started |
@@ -44,7 +46,7 @@ build-only GRUB BLS path that prevented installed boot; the corrected ISO clears
 that path and passed a fresh installation and disk-only boot test. See
 [docs/status.md](docs/status.md) for checksums, logs and separate test gates.
 This is an internal engineering image, not a public release. Hardware, Secure
-Boot, gaming and phone integration remain untested.
+Boot and gaming acceptance remain open; phone-test scope is recorded below.
 
 ### Stage 2 detail
 
@@ -88,7 +90,7 @@ and a Qt/QML per-game profile editor: validated settings, private atomic saves,
 fixed launch-option previews, local reset and read-only tool availability.
 All 14 repository tests and five Qt tests pass, including Qt tests at 200% scale.
 Runtime monitoring, authorized system integration and crash/reboot restoration
-are not implemented yet. The editor is now packaged in `ujwalos-apps` 0.1-1
+are not implemented yet. The editor is now packaged in `ujwalos-apps` 0.1-3
 and included in the latest engineering ISO above. Stage 3 hardware/game gates stay open.
 
 ### Stage 5 detail
@@ -96,13 +98,14 @@ and included in the latest engineering ISO above. Stage 3 hardware/game gates st
 The [phone panel](docs/phone-panel.md) has a Qt/QML view for device
 pairing/reachability status and battery snapshots through KDE Connect's session
 bus. Refresh is explicit and does not start the service. Automated tests cover
-simulated states and failures; no real-phone compatibility is claimed. Source
+simulated states and failures. The owner confirmed basic phone linking works on
+2026-09-30; that test is marked passed, not universal phone compatibility. Source
 now includes confirmed unpair requests, fresh state checks, public verification-code
 display and an explicit KDE Connect launcher. Pairing, acceptance and cancellation
 use KDE Connect's UI; direct pairing calls were removed after upstream review
 identified a race with incoming requests. Notifications, clipboard, transfers and
-real-device tests remain pending. The updated RPM is `ujwalos-apps` 0.1-3; the existing ISO
-still contains the read-only 0.1-1 panel and has not been rebuilt for these controls.
+broader real-device acceptance remain pending. The updated RPM is `ujwalos-apps` 0.1-3 and
+is included in the latest ISO above.
 
 ### Stage 7 detail
 
@@ -110,7 +113,8 @@ Stage 7 has started with [requirements and recovery test gates](docs/recovery-an
 An offline engineering-artifact manifest tool records and verifies SHA-256 and
 sizes without signing, publishing or claiming release readiness. Update/recovery,
 accessibility, dual-boot and repeated hardware acceptance remain pending.
-This work does not close the unfinished Stage 3-6 gates or rebuild the ISO.
+This work does not close the unfinished Stage 3-6 gates. The latest ISO has a
+separate unsigned artifact manifest; recovery tooling/docs remain repository tools.
 
 ## Project documents
 
