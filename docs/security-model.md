@@ -2,6 +2,17 @@
 
 This is a planning threat model, not a completed security audit.
 
+A bounded [source/configuration security review](security-review-2026-09-30.md)
+was completed on 2026-09-30. Source fixes and regression checks passed on
+2026-10-15 for P1 compose RPM signature enforcement, P2 builder SSH exposure and
+P3 profile-file blocking. The corrected ISO passed compose and media checks;
+live boot, installation and installed runtime validation remain pending. See
+[status](status.md). Required controls below must not be read as already
+verified. Signed artifacts, an authenticated custom-package update channel,
+complete dependency review and installed runtime security tests remain
+outstanding. The 63 automated test passes are not security certification (48 configuration, 13 UI
+and 2 isolated D-Bus tests passed on 2026-10-15).
+
 | Asset / boundary | Threat | Required control and validation |
 | --- | --- | --- |
 | Host versus builder | Compose damages host or disks | Disposable builder, no physical disk passthrough, inspect privileged build scripts |

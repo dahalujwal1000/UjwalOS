@@ -12,6 +12,21 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def enforce_repository_signatures(path):
+    """Require signed packages from the two pinned Fedora repositories."""
+    tree = ET.parse(path)
+    repositories = tree.findall("repository")
+    if len(repositories) != 2 or {repo.get("alias") for repo in repositories} != {"fedora", "updates"}:
+        raise ValueError("Unexpected Fedora repository set; review signature policy")
+    for repo in repositories:
+        source = repo.find("source")
+        if source is None or not source.get("path", "").startswith(
+                "https://mirrors.fedoraproject.org/metalink?") or not source.findall("signing"):
+            raise ValueError("Expected Fedora metalink and signing keys")
+        repo.set("package_gpgcheck", "true")
+    tree.write(path, encoding="unicode")
+
+
 def prepare(destination):
     inputs = json.loads((ROOT / "image/inputs.json").read_text())
     archive = ROOT / "image" / inputs["archive"]
@@ -22,12 +37,13 @@ def prepare(destination):
     with tarfile.open(archive) as source:
         source.extractall(destination, filter="data")
     # QEMU's mapped 9p export does not expose native host symlinks reliably.
-    # Materialize the pinned repository alias; its bytes remain identical.
+    # Materialize the pinned repository alias before enforcing signatures.
     alias = destination / "repositories/core.xml"
     if alias.is_symlink():
         content = alias.read_bytes()
         alias.unlink()
         alias.write_bytes(content)
+    enforce_repository_signatures(alias)
     description = destination / inputs["kiwi_file"]
     original = description.read_text()
     needle = '<image schemaversion="7.4" name="Fedora">'
@@ -37,6 +53,11 @@ def prepare(destination):
                                                        f'name="{inputs["image_name"]}"'))
     derived = derived.replace("</image>",
                               '\t<include from="this://./ujwalos-packages.xml"/>\n</image>')
+    if derived.count("<packagemanager>dnf5</packagemanager>") != 1:
+        raise ValueError("Expected one DNF5 preference block")
+    derived = derived.replace("<packagemanager>dnf5</packagemanager>",
+                              "<packagemanager>dnf5</packagemanager>\n"
+                              "\t\t<rpm-check-signatures>true</rpm-check-signatures>")
     ET.fromstring(derived)
     description.write_text(derived)
     liveinstall = destination / "components/liveinstall.xml"

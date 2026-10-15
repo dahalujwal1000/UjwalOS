@@ -1,5 +1,6 @@
 """Tests for source integrity, bounded customization and safe refusal paths."""
 import hashlib
+from configparser import ConfigParser
 import importlib.util
 import json
 import os
@@ -9,6 +10,7 @@ import subprocess
 import tarfile
 import tempfile
 import unittest
+from types import SimpleNamespace
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -34,6 +36,7 @@ class ImageTests(unittest.TestCase):
             self.assertEqual(tree.getroot().get("name"), "UjwalOS-0.1")
             self.assertEqual(tree.findtext("preferences/release-version"), "44")
             self.assertEqual(tree.findtext("preferences/packagemanager"), "dnf5")
+            self.assertEqual(tree.findtext("preferences/rpm-check-signatures"), "true")
             liveinstall = ET.parse(derived / "components/liveinstall.xml")
             x86_type = liveinstall.find("./preferences[@profiles='LiveInstall'][@arch='x86_64']/type")
             self.assertEqual(x86_type.get("fscreateoptions"), "-C 1048576")
@@ -117,8 +120,43 @@ class ImageTests(unittest.TestCase):
             for dependency in ("python3-pyside6", "qt6-qtdeclarative", "kde-connect"):
                 self.assertIn(dependency, dependencies)
             self.assertFalse((derived / "repositories/core.xml").is_symlink())
-            self.assertEqual((derived / "repositories/core.xml").read_bytes(),
-                             (derived / "repositories/core-nonrawhide.xml").read_bytes())
+            repositories = ET.parse(derived / "repositories/core.xml")
+            original_repositories = ET.parse(derived / "repositories/core-nonrawhide.xml")
+            for repo in original_repositories.findall("repository"):
+                repo.set("package_gpgcheck", "true")
+            self.assertEqual(ET.tostring(repositories.getroot()),
+                             ET.tostring(original_repositories.getroot()))
+            # Exercise KIWI's actual DNF backend without mounts or transactions.
+            from kiwi.repository.dnf5 import RepositoryDnf5
+            backend = RepositoryDnf5(SimpleNamespace(root_dir=tmp, shared_location=tmp),
+                                     custom_args=["check_signatures"])
+            try:
+                for repo in repositories.findall("repository"):
+                    name = repo.get("alias")
+                    backend.add_repo(name, repo.find("source").get("path"),
+                                     sourcetype=repo.get("sourcetype"),
+                                     pkg_gpgcheck=repo.get("package_gpgcheck") == "true")
+                    effective = ConfigParser(interpolation=None)
+                    effective.read(Path(backend.shared_dnf_dir['reposd-dir']) / f"{name}.repo")
+                    self.assertTrue(effective.getboolean(name, "gpgcheck"))
+                    self.assertFalse(effective.getboolean(name, "repo_gpgcheck"))
+                self.assertTrue(backend.runtime_dnf_config.getboolean("main", "gpgcheck"))
+            finally:
+                backend.cleanup()
+            # Real libdnf verification rejects a valid but unsigned RPM. All
+            # state is private; no package transaction or host key import runs.
+            import libdnf5
+            base = libdnf5.base.Base()
+            cfg = base.get_config()
+            cfg.installroot = str(Path(tmp) / "signature-root")
+            cfg.cachedir = str(Path(tmp) / "signature-cache")
+            cfg.logdir = str(Path(tmp) / "signature-logs")
+            cfg.persistdir = str(Path(tmp) / "signature-state")
+            cfg.plugins = False
+            base.setup()
+            verifier = libdnf5.rpm.RpmSignature(base)
+            self.assertEqual(verifier.check_package_signature(str(apps)),
+                             verifier.CheckResult_FAILED_NOT_SIGNED)
             self.assertIn("isomd5sum", (derived / "boxroot/etc/kiwi.yml.d/ujwalos.yml").read_text())
             extra = ET.parse(derived / "ujwalos-packages.xml")
             self.assertEqual([p.get("name") for p in extra.findall("packages/package")],
@@ -128,8 +166,21 @@ class ImageTests(unittest.TestCase):
                 prepare.prepare(derived)
             self.assertEqual(before, (derived / "config.sh").read_bytes())
 
+    def test_repository_policy_refuses_unreviewed_inputs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "repositories.xml"
+            for document in (
+                '<image/>',
+                '<image><repository alias="third-party"/></image>',
+                '<image><repository alias="fedora"/><repository alias="updates"/></image>',
+            ):
+                path.write_text(document)
+                with self.assertRaises(ValueError):
+                    prepare.enforce_repository_signatures(path)
+
     def test_shell_syntax(self):
         for path in ("scripts/build/build-iso.sh", "scripts/build/build-branding-rpm.sh",
+                     "scripts/build/qemu-no-forward.sh",
                      "scripts/build/build-gaming-rpm.sh", "gaming/root/usr/bin/ujwalos-gaming-setup",
                      "scripts/build/build-apps-rpm.sh",
                      "scripts/build/generate-plymouth-prompts.sh",

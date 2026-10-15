@@ -41,11 +41,25 @@ read-only command availability. Qt's application config directory holds the
 profiles, and QLockFile prevents competing editor instances. Atomic replacement prevents partial JSON
 publication, but is not a privileged-state journal or a reboot-recovery claim.
 Reset changes requested profile values, not live system settings or Steam files.
-There is no helper or runtime monitoring yet. The editor is now packaged in
-`ujwalos-apps` 0.1-1 and included in the engineering ISO recorded in
+There is no helper or runtime monitoring yet. The editor is packaged in
+`ujwalos-apps` 0.1-4 and included in the corrected engineering ISO
+`out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso` recorded in
 [status](status.md). System Python
 does not have PySide6; tests use a repository-local virtual environment with
 PySide6-Essentials 6.11.2. No host system packages were installed.
+
+On 2026-10-15, the combined repository run passed 48 configuration, 13 UI
+and 2 synthetic D-Bus tests (not all are Gaming Center tests). Stage 4 remains
+incomplete: installed-session acceptance, accessibility, monitoring and authorized
+settings/restoration gates are open. The security review reproduced a local
+profile-file blocking issue. Source fix dated 2026-10-15 uses nonblocking,
+no-follow opens and regular-file checks, with a 256 KiB document limit and
+256-profile limit on both load and save. Invalid files disable editing without
+replacing the user's data. The 0.1-4 package is in the corrected ISO; compose
+and media checks passed, while live boot and installation remain pending.
+Regression and image evidence is recorded in [status](status.md). Python's
+[file descriptor APIs](https://docs.python.org/3/library/os.html#os.open)
+were checked on 2026-10-15.
 
 ## Development and tests
 
@@ -79,7 +93,8 @@ for the Python/QML frontend. Qt's
 [QStandardPaths](https://doc.qt.io/qtforpython-6/PySide6/QtCore/QStandardPaths.html)
 provide instance locking and user-specific storage. Fixed wrapper names follow the upstream
 sources recorded in [gaming setup](gaming-setup.md). Qt/Fedora package selection
-and redistribution review remain required before packaging.
+was checked for image packaging; final project licensing and redistribution
+clearance remain required before public release.
 
 The goal tracker rejected creation of a Stage 4 goal because the unfinished
 Stage 3 goal still exists. These repository requirements record the new scope

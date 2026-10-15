@@ -1,7 +1,13 @@
 # Architecture
 
-Status: Stages 1 and 2 VM acceptance passed; Stage 3 gaming foundation in
-progress, 2026-09-28. See status.md for validation evidence.
+Status reconciled 2026-10-15: the newest ISO, containing apps 0.1-4 and the
+security source fixes, passed compose and media checks. Live boot and installation
+are pending. The older 2026-09-30 image passed live Plasma boot. Stages 1 and 2
+acceptance passed on earlier recorded images; Stage 3 optional setup is
+implemented with acceptance pending. Stages 4/5 previews are packaged, Stage 6
+is unimplemented, and Stage 7 has artifact verification/recovery documentation
+but open operational and security gates. See the
+[acceptance summary](status.md#current-acceptance-summary) for detailed evidence.
 
 ```text
 UEFI → Fedora-supported boot chain → Fedora kernel/initramfs → systemd
@@ -26,7 +32,10 @@ theme; login validation follows a fresh image boot/install test.
 
 The Stage 4 Qt 6/QML profile editor runs as the user, stores requested settings
 under Qt's application config directory and locks out competing instances.
-It does not execute games or mutate system settings. See
+Apps RPM 0.1-4 adds bounded, nonblocking profile-file reads and matching save
+limits; rejected files are preserved. The 2026-10-15 configuration regression
+suite passed these cases. The editor does not execute games or mutate system
+settings. See
 [Gaming Center requirements](gaming-center.md) for its pending integration gates.
 Reuse KDE Connect's supported
 interfaces for local continuity. A privileged helper is deferred until a

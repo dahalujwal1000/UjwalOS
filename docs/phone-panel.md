@@ -55,9 +55,11 @@ codes before accepting on the phone. Transport errors have an uncertain outcome,
 so refresh before retrying. No automatic retries, plugin-setting changes or
 private-key access are added. KDE Connect owns trust and plugin permissions.
 
-The updated source packages as `ujwalos-apps` 0.1-3 and is included in the new
-engineering ISO under `out/build-9BaEqZ1c/result/`. The panel opened in its live
-VM session. Broader real-phone and fresh installed-session acceptance remain pending.
+The updated source is packaged as `ujwalos-apps` 0.1-4 and included in the
+corrected engineering ISO at
+`out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso`. Compose and media checks
+passed; live boot and fresh installed-session acceptance of this ISO remain
+pending. The earlier live-VM smoke test belongs to the 0.1-3 image.
 
 ## Owner acceptance
 
@@ -67,6 +69,13 @@ exact image and tested features were not supplied; this is not an independently
 reproduced test or a pass for all Stage 5 requirements. Notification/clipboard/file
 transfer integration, offline revocation, reconnect/reboot, permission changes
 and multi-user isolation remain unconfirmed.
+
+The 2026-10-15 combined test run passed 48 configuration, 13 Qt UI and 2 isolated
+D-Bus tests. These exercise repository behavior and synthetic devices, not the
+remaining Android acceptance matrix. Record phone model, Android/KDE Connect
+versions, ISO checksum and individual feature outcomes on the next real-device
+run. The [security review](security-review-2026-09-30.md) checked one upstream
+KDE Connect advisory; the phone's version and full dependency audit remain open.
 
 ## Development and verification
 

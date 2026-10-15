@@ -1,7 +1,17 @@
 # Stage 3 gaming setup and test protocol
 
-Status: implementation in progress, checked 2026-09-28. No game performance or
-compatibility result is claimed yet.
+Status reconciled 2026-09-30: optional setup implementation complete; full Stage 3
+acceptance testing remains pending. Package/launcher installation, live Fedora
+tools installation and installed-guest PolicyKit cancellation passed on the
+recorded Stage 3 image. The VM GameMode governor self-test failed because guest
+governor files were absent; real-hardware activation/restoration is still open.
+Steam/Proton, baseline performance, controller and real GPU/driver tests below
+have not passed. An informal owner Minecraft run in VirtualBox using llvmpipe
+does not close those gates. See [current evidence](status.md#current-acceptance-summary).
+
+The corrected 2026-10-15 engineering ISO also includes `ujwalos-gaming-setup`;
+its compose and media checks passed, but live boot and installation of that ISO
+remain pending. This does not change the separate Stage 3 test results above.
 
 ## Optional setup
 

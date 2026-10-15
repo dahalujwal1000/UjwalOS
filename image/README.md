@@ -21,15 +21,22 @@ ISO retained the stock wallpaper. Stage 2 adds an original wallpaper and
 desktop defaults in the versioned `ujwalos-branding` RPM.
 Stage 3 adds the separate `ujwalos-gaming-setup` RPM with a user-invoked menu;
 it does not preinstall Steam or gaming tools. The repository alias
-symlink is materialized with identical content for mapped
-9p sharing. A `boxroot` overlay selects Fedora's `isomd5sum` media-check backend
+symlink is materialized for mapped 9p sharing, then both active Fedora
+repositories receive `package_gpgcheck="true"`. The global
+`rpm-check-signatures` preference is also enabled. Fedora signing keys remain
+upstream; locally built unsigned UjwalOS RPMs use the separate, explicit
+`rpm -Uvh` step in the disposable image root. This exception does not disable
+Fedora repository verification. A `boxroot` overlay selects Fedora's `isomd5sum` media-check backend
 inside the disposable builder; it is not an installed-image change. The x86-64
 live filesystem disables EROFS fragments after a builder failure, retaining
 LZMA level 6 compression and 1 MiB clusters. The
 generated `config.sh` unsets a KIWI build-path `blsdir` in GRUB's environment
 for live images; without this, Anaconda copies a path that hides installed
-kernel entries. It also installs the branding and gaming-setup RPMs into the disposable image
-root and selects its Plymouth theme. The RPM owns initial Plasma defaults,
+kernel entries. It installs the branding and gaming-setup RPMs and `ujwalos-apps`
+0.1-4 into the disposable image root, then selects the Plymouth theme. The
+locally built RPMs are unsigned engineering packages installed explicitly in
+that root; no authenticated custom-package update channel exists yet. The
+branding RPM owns initial Plasma defaults,
 wallpaper and login appearance without changing installed release identity,
 installer or GRUB templates. Version 44 and release-version 44 remain
 unchanged. Compose CLI overrides only ISO volume/application ID and publisher.
@@ -49,6 +56,29 @@ DNF5 resolves these stock repositories from `repositories/core.xml`:
 The signing key is supplied by `distribution-gpg-keys` at
 `/usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-44-primary`.
 No testing, Rawhide or third-party repository is selected.
+
+Signature behavior verified 2026-10-15 against the
+[KIWI repository schema](https://osinside.github.io/kiwi/image_description/elements.html#repository),
+[pinned builder's KIWI 11.0.5 DNF5 backend](https://github.com/OSInside/kiwi/blob/v11.0.5/kiwi/repository/dnf5.py),
+and [DNF5 configuration reference](https://dnf5.readthedocs.io/en/latest/dnf5.conf.5.html).
+Tests inspect the actual KIWI-generated DNF configuration and use
+[libdnf5's verifier](https://github.com/rpm-software-management/dnf5/blob/main/include/libdnf5/rpm/rpm_signature.hpp)
+to reject an unsigned RPM against a private install root. They do not install
+packages or import keys into the host database. The opt-in
+`tests/integration/check_rpm_signatures.py` additionally rejects a signed Fedora
+RPM with only an unrelated public key trusted, then accepts it after importing
+the correct key into that private root; exact fixture/command evidence is in
+[status](../docs/status.md). Repository metadata signature
+checking is not enabled; Fedora metalinks and signed packages remain distinct
+checks.
+
+The corrected ISO composed on 2026-10-15 is
+`out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso` (3,834,904,576 bytes;
+SHA-256 `a1efa6cc0dfb5beb94e64fab11c658a20463980cbc9f8875295a3a6c3cf38775`).
+Compose, SHA-256, ISO9660 and UEFI boot-catalog checks passed. Live boot,
+installation and disk-only boot remain pending. This is an internal engineering
+artifact; public release and redistribution clearance are not claimed. See
+[status](../docs/status.md) for test details.
 
 This makes the **description derivative reproducible**, not the entire image:
 Fedora updates and group metadata can change. The builder is hash-pinned in

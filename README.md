@@ -5,16 +5,27 @@ desktop layout, and opt-in Android continuity through KDE Connect.
 
 ## Current status
 
-Latest engineering ISO (includes the Stage 4/5 previews):
-`out/build-9BaEqZ1c/result/UjwalOS-0.1.x86_64-44-0.iso`
-(3,788,185,600 bytes; SHA-256
-`c1d38ba327802c95b6fc00ad8f5dfc8e6a00de43a6eca1cf037f49ec2c760563`).
-Compose, checksum, ISO9660, UEFI catalog and live Plasma boot checks passed.
-The updated Phone Panel opened in the live VM; a fresh installation of this ISO
-is not yet tested. Triple boot with Windows and Fedora, shared EFI-partition
-coexistence, hardware and Secure Boot are not validated. Test the live USB first;
-do not erase existing systems or assume this image is triple-boot certified. See
-[status](docs/status.md) for separate boot and installation evidence.
+Newest built engineering ISO (apps 0.1-4, including the 2026-10-15 security
+source fixes):
+`out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso`
+(3,834,904,576 bytes; SHA-256
+`a1efa6cc0dfb5beb94e64fab11c658a20463980cbc9f8875295a3a6c3cf38775`).
+Compose, checksum, ISO9660 and UEFI catalog/media checks passed. Live boot,
+fresh installation and installed-disk boot are pending for this ISO. The older
+`out/build-9BaEqZ1c` image is the latest image with a recorded live Plasma boot;
+it does not contain the security fixes. Triple boot with Windows and Fedora,
+shared EFI-partition coexistence, hardware and Secure Boot are not validated.
+See [status](docs/status.md) for separate image and test evidence.
+
+Documentation reconciled 2026-10-15. The latest recorded automated run passed
+**63 tests: 48 configuration, 13 Qt UI and 2 isolated D-Bus tests**. These are
+not hardware or security certification. The [security review](docs/security-review-2026-09-30.md)
+is complete within its stated scope. Source fixes for its three findings—compose
+signature enforcement, builder SSH exposure and profile-file blocking—now pass
+regression checks; the newest ISO above contains these source changes but has
+not yet been boot-tested. See the
+[acceptance summary](docs/status.md#current-acceptance-summary) for completed work,
+pending implementation and remaining testing.
 
 | Stage | Description | Status |
 |-------|-------------|--------|
@@ -88,10 +99,12 @@ remain open, so the full Stage 3 acceptance gate has not passed. See the [test p
 Stage 4 has started with [requirements and acceptance gates](docs/gaming-center.md)
 and a Qt/QML per-game profile editor: validated settings, private atomic saves,
 fixed launch-option previews, local reset and read-only tool availability.
-All 14 repository tests and five Qt tests pass, including Qt tests at 200% scale.
+The latest combined automated results are recorded above; earlier Qt smoke tests
+also passed at 200% scale. These do not establish full accessibility acceptance.
 Runtime monitoring, authorized system integration and crash/reboot restoration
-are not implemented yet. The editor is now packaged in `ujwalos-apps` 0.1-3
-and included in the latest engineering ISO above. Stage 3 hardware/game gates stay open.
+are not implemented yet. The editor is now packaged in `ujwalos-apps` 0.1-4
+and included in the newest built ISO above; its live boot remains pending.
+Stage 3 hardware/game gates stay open.
 
 ### Stage 5 detail
 
@@ -104,8 +117,8 @@ now includes confirmed unpair requests, fresh state checks, public verification-
 display and an explicit KDE Connect launcher. Pairing, acceptance and cancellation
 use KDE Connect's UI; direct pairing calls were removed after upstream review
 identified a race with incoming requests. Notifications, clipboard, transfers and
-broader real-device acceptance remain pending. The updated RPM is `ujwalos-apps` 0.1-3 and
-is included in the latest ISO above.
+broader real-device acceptance remain pending. The updated RPM is `ujwalos-apps`
+0.1-4 in the newest built ISO; live boot and installation remain pending.
 
 ### Stage 7 detail
 
@@ -113,8 +126,8 @@ Stage 7 has started with [requirements and recovery test gates](docs/recovery-an
 An offline engineering-artifact manifest tool records and verifies SHA-256 and
 sizes without signing, publishing or claiming release readiness. Update/recovery,
 accessibility, dual-boot and repeated hardware acceptance remain pending.
-This work does not close the unfinished Stage 3-6 gates. The latest ISO has a
-separate unsigned artifact manifest; recovery tooling/docs remain repository tools.
+This work does not close the unfinished Stage 3-6 gates; recovery tooling/docs
+remain repository tools.
 
 ## Project documents
 
@@ -122,6 +135,7 @@ separate unsigned artifact manifest; recovery tooling/docs remain repository too
 - [Architecture](docs/architecture.md) and [image strategy](docs/decisions/0001-image-strategy.md)
 - [Build preparation and test gates](docs/build-and-test.md)
 - [Security model](docs/security-model.md)
+- [Security review and remediation status](docs/security-review-2026-09-30.md)
 - [Compatibility and dependency review](docs/compatibility.md)
 - [Roadmap](docs/roadmap.md) and [release process](docs/release-process.md)
 - [Recovery and release-quality protocol](docs/recovery-and-quality.md)

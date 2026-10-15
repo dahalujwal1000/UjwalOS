@@ -1,6 +1,6 @@
 Name:           ujwalos-apps
 Version:        0.1
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        UjwalOS development Gaming Center and Phone Panel
 License:        LicenseRef-UjwalOS-Internal
 BuildArch:      noarch

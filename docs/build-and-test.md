@@ -1,5 +1,23 @@
 # Build and test Fedora 44 UjwalOS v0.1
 
+## Current acceptance and security limits
+
+As of 2026-10-15, the latest corrected ISO is
+`out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso` (3,834,904,576 bytes;
+SHA-256 `a1efa6cc0dfb5beb94e64fab11c658a20463980cbc9f8875295a3a6c3cf38775`).
+Compose, checksum, ISO9660 and UEFI boot-catalog checks passed. Live boot,
+fresh installation and disk-only boot for this image are pending; earlier
+images' passes do not transfer to it. No public release or redistribution
+clearance is claimed. See the [acceptance summary](status.md#current-acceptance-summary)
+and the dated [status evidence](status.md#2026-10-15---security-remediation-and-corrected-compose).
+
+Source remediation dated 2026-10-15 addresses the
+[security review](security-review-2026-09-30.md) findings with Fedora RPM signature
+enforcement, removal of builder SSH forwarding, and bounded profile-file reads.
+See [status](status.md) for regression and new-compose evidence; historical
+images do not contain these fixes. Hardware, USB boot, Secure Boot,
+display-scaling acceptance and dual/triple-boot testing remain open.
+
 ## Inputs and scope
 
 Use Fedora 44 x86-64. The pinned upstream source, repositories, profile and
@@ -24,10 +42,12 @@ generated build script clears a temporary GRUB BLS path as described below.
 This is an internal engineering ISO; branding/trademark review is still required
 before publication.
 
-Current source also builds `ujwalos-apps` 0.1-3 with desktop launchers for the
+Current source also builds `ujwalos-apps` 0.1-4 with desktop launchers for the
 Stage 4 Gaming Center profile editor and Stage 5 Phone Panel with confirmed
 unpair requests and an explicit native KDE Connect launcher for pairing.
-The latest ISO in `out/build-9BaEqZ1c/result/` includes this updated package.
+The corrected ISO above contains 0.1-4. The historical ISO in
+`out/build-9BaEqZ1c/result/` includes 0.1-3; 0.1-4 adds the profile-file
+security fix.
 `python3-pyside6` and `qt6-qtdeclarative` are explicitly resolved in the image;
 no development virtual environment is copied. The package has no scriptlets,
 autostart entries or privileged helper. Runtime acceptance of these previews
@@ -119,7 +139,7 @@ The KIWI invocation is recorded verbatim in each run's `command.sh`. Its form is
 ```sh
 kiwi-ng --config image/compose/kiwi.yml --temp-dir "$run/tmp" --type iso --profile KDE-Desktop-Live \
   --kiwi-file Fedora.kiwi --debug system boxbuild --box universal --no-update-check \
-  --9p-sharing --box-memory 6G --box-smp-cpus 4 --cpu host kiwi \
+  --9p-sharing --ssh-port 10022 --box-memory 6G --box-smp-cpus 4 --cpu host kiwi \
   --description "$run/description" --target-dir "$run/result" \
   --set-type-attr volid=UjwalOS-0.1-KDE-Live-44 \
   --set-type-attr application_id=UjwalOS-0.1-KDE_Desktop-Live-44 \
@@ -131,19 +151,33 @@ KVM the wrapper replaces `--cpu host` with `--no-accel --cpu max`. Software
 emulation is much slower. Do not use the older KIWI 10 `boxbuild -- ...` syntax
 with this KIWI 11 wrapper; KIWI 11 uses the `kiwi` subcommand.
 
+Use the wrapper, not the illustrative `boxbuild` command directly: the wrapper
+places a private QEMU launcher in the run directory's PATH. It removes the
+plugin's exact `hostfwd=tcp::10022-:22` argument while preserving outbound user
+networking and 9p sharing. Changed, duplicate or unexpected forwarding arguments
+cause refusal before QEMU starts. The real QEMU executable is resolved before
+installing the launcher. SSH is not needed for this 9p compose workflow.
+Verified 2026-10-15 against [boxbuild options](https://osinside.github.io/kiwi/commands/system_boxbuild.html),
+[upstream network defaults](https://github.com/OSInside/kiwi/blob/main/kiwi/boxbuild/defaults.py),
+[QEMU lookup/launch](https://github.com/OSInside/kiwi/blob/main/kiwi/boxbuild/box_build.py),
+and the installed boxed plugin 0.2.60. Regression tests exercise the installed
+defaults, PATH resolution, refusal paths and a real minimal QEMU listener check.
+
 For a VM test on a memory-constrained host, set
 `UJWALOS_VM_MEMORY_MIB=2048` before `scripts/test/test-iso.sh`; the default is
 4096 MiB and accepted values are 2048-8192 MiB. This changes only the private
 test VM's memory allocation, not the 6 GiB ISO builder requirement.
 
 The generated description materializes the upstream repository alias because
-mapped 9p sharing does not reliably expose host symlinks. The supported `boxroot`
+mapped 9p sharing does not reliably expose host symlinks. Both active Fedora
+repositories explicitly require package signatures, as does the global RPM
+preference. See [signature policy and sources](../image/README.md). The supported `boxroot`
 hook installs a builder-only KIWI drop-in selecting `isomd5sum`; this preserves
 Fedora's live media check rather than disabling it.
-The normal-user wrapper builds `ujwalos-branding` and
-`ujwalos-gaming-setup` with `rpmbuild` under the fresh
-`out/build-*/rpmbuild/` and `out/build-*/gaming-rpmbuild/` directories.
-KIWI copies both unsigned RPMs into its disposable image root; the generated
+The normal-user wrapper builds `ujwalos-branding`, `ujwalos-gaming-setup` and
+`ujwalos-apps` with `rpmbuild` under the fresh run's `rpmbuild/`,
+`gaming-rpmbuild/` and `apps-rpmbuild/` directories.
+KIWI copies all three unsigned RPMs into its disposable image root; the generated
 live `config.sh` installs them there and selects the Plymouth theme before the
 image is packed. This does not install packages on the host. The theme, login
 and desktop defaults are owned by the branding RPM. New Plasma users read the
@@ -230,6 +264,9 @@ attempt gets a new output directory. Do not disable host security to work around
 a build failure. Build logs can contain local paths; review before sharing.
 
 Repository checks:
+
+The signature regression uses the installed KIWI and Python libdnf5 bindings
+with a temporary install root; it performs no host package transaction.
 
 ```sh
 python3 -m unittest discover -s tests/config -v

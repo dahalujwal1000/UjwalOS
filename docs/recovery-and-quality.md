@@ -93,6 +93,14 @@ have not yet passed UjwalOS Stage 7 VM acceptance.
 
 ## Acceptance record (all pending)
 
+The table below covers operational/release gates, not the completed artifact-tool
+milestone. As of 2026-10-15, artifact-tool unit tests and the recorded manifest
+verification passed. The corrected ISO passed compose and media checks, while
+live boot, fresh installation and disk-only boot remain pending. The bounded
+security review's three findings have source fixes and passing regression
+checks; runtime and installed-image acceptance remain separate. See the
+[consolidated evidence](status.md#current-acceptance-summary).
+
 | Gate | Required evidence |
 | --- | --- |
 | Current image clean install | Blank virtual disk, ISO detached, two logins/reboots |
@@ -103,6 +111,9 @@ have not yet passed UjwalOS Stage 7 VM acceptance.
 | Accessibility | Keyboard/focus, screen reader, contrast, scaling and external display results |
 | Hardware | Repeated checks on multiple systems with limitations recorded |
 | Public artifacts | Licensing, input archive/repeat builds, signing and trusted key distribution |
+| Security remediation | Source fixes, signature rejection tests and builder listener restriction have regression evidence; corrected ISO compose/media checks passed, but runtime retest and security gates remain open |
+| Custom-package updates | Authenticated source and successful delivery of a newer UjwalOS RPM in an installed guest |
+| Runtime security | Full package advisory review, SELinux, firewall/listeners, account cleanup and multi-user tests |
 
 ## Sources
 

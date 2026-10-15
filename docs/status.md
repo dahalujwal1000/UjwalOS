@@ -1,5 +1,165 @@
 # Status and unreleased notes
 
+## 2026-10-15 - Security remediation and corrected compose
+
+Implemented the three findings from the September security review:
+
+- Fedora repositories now explicitly require package signatures, with global
+  RPM signature checking enabled too. The generated description retains the
+  Fedora signing keys and metalinks. The unsigned local UjwalOS RPM installation
+  remains an explicit, separate engineering exception.
+- A private QEMU launcher removes the boxed plugin's exact SSH host-forward
+  argument, preserving outbound networking and 9p sharing. Unexpected forwarding
+  arguments fail before QEMU launches. The actual builder process has
+  `-nic user,model=virtio` and no host forward; `ss -ltnp` showed no QEMU listener
+  and no port 10022 listener during this compose.
+- Gaming Center reads profiles with nonblocking/no-follow opens, checks for a
+  regular file, limits input to 256 KiB and 256 profiles, and applies matching
+  save limits. Rejected files are preserved. The apps RPM is now 0.1-4.
+
+The networking and profile changes were independently implemented and reviewed;
+signature enforcement was integrated with them. Existing owner documentation
+edits and `opencode.md` were preserved.
+
+Verification commands/results:
+
+- `python3 -m unittest discover -s tests/config -v`: 48 passed. Includes real
+  KIWI-generated DNF configuration checks, real libdnf unsigned-RPM rejection
+  in a temporary install root, QEMU argument/lookup/listener checks, and profile
+  FIFO, symlink, directory, byte/count limit, malformed UTF-8/JSON and preservation
+  regressions. The FIFO check runs in a subprocess with a three-second timeout.
+- `python3 -m unittest discover -s tests/config -p test_builder_network.py -v`:
+  four passed again after extending changed-port and duplicate-forward cases.
+- `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software out/stage4-venv/bin/python -m unittest discover -s tests/ui -v`:
+  13 passed.
+- `dbus-run-session -- out/stage4-venv/bin/python tests/integration/test_phone_transport.py -v`:
+  two passed on a synthetic isolated bus.
+- `scripts/build/build-iso.sh --validate`: passed in `out/build-YA5E5UtF`.
+  Expanded XML contains both repository checks and `rpm-check-signatures=true`.
+  The final pre-push repeat also passed in `out/build-IMkKVQNJ`.
+- `bash -n scripts/build/qemu-no-forward.sh`: passed; configuration tests also
+  checked existing shell entry points. `git diff --check`: passed.
+- `scripts/build/build-iso.sh`: passed in `out/build-6KtHtk1p`; description,
+  Fedora metalink preflight and all three pinned builder hashes passed. Builder
+  guest and wrapper both exited 0. The ISO is 3,834,904,576 bytes with SHA-256
+  `a1efa6cc0dfb5beb94e64fab11c658a20463980cbc9f8875295a3a6c3cf38775`.
+- `scripts/test/test-iso.sh out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso --check-only`:
+  passed SHA-256, ISO9660 and UEFI boot-catalog checks. This is not a boot test.
+- Prepared [GitHub VM-test pre-release draft](github-vm-test-prerelease-draft.md)
+  with artifact details, verification, VM instructions and limitations. Public
+  distribution remains blocked by the internal license placeholder and pending
+  Fedora trademark/remix review; controlled VM testing remains the draft scope.
+- `python3 tests/integration/check_rpm_signatures.py --unsigned-rpm out/build-6KtHtk1p/description/root/image/ujwalos-apps.rpm --signed-rpm out/signature-check-OAMeKmX8/fedora-release-common-44-18.noarch.rpm --trusted-key /usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-44-primary --unrelated-key /usr/share/distribution-gpg-keys/fedora/RPM-GPG-KEY-fedora-43-primary`:
+  all five checks passed. A real signed Fedora RPM is rejected with an empty
+  keyring and with only the unrelated Fedora 43 key trusted; importing Fedora
+  44's correct key makes it pass. The unsigned apps RPM remains rejected before
+  and after imports. All key imports occur in a temporary install root.
+  This extra check followed an independent read-only review, which found no
+  concrete code regression and identified the missing wrong-key case.
+  Fixture download command:
+  `curl --fail --location --proto '=https' --proto-redir '=https' --connect-timeout 15 --max-time 45 https://dl.fedoraproject.org/pub/fedora/linux/updates/44/Everything/x86_64/Packages/f/fedora-release-common-44-18.noarch.rpm -o out/signature-check-OAMeKmX8/fedora-release-common-44-18.noarch.rpm`.
+  Verified fixture SHA-256:
+  `ea06ce5597746df56a5cc7c3bd184a8e0b05eec048f60456b0b9469fc59a0cdc`.
+
+Code, local RPM preparation and corrected ISO compose/media checks are complete;
+live boot, fresh installation and disk-only reboot are pending. No hardware test or public release
+is claimed. Host packages, physical disks and boot entries were not changed.
+A full distribution advisory/runtime audit remains pending. Signed artifacts
+and custom-package updates remain open.
+
+Sources verified 2026-10-15: [signature policy](../image/README.md),
+[boxed networking](build-and-test.md), and
+[Python file-descriptor APIs](https://docs.python.org/3/library/os.html#os.open).
+
+## Current acceptance summary
+
+Baseline reconciled 2026-09-30; see the 2026-10-15 remediation entry above for
+new source changes and checks. PASS applies only to the
+recorded artifact and test scope, not automatically to newer images. Documentation
+updates do not constitute new implementation, security fixes or test execution.
+
+| Stage | Completed implementation / evidence | Remaining implementation or testing |
+| --- | --- | --- |
+| 0 | Specification, architecture decision, initial threat model and build plan | Release input snapshots, licensing and complete dependency audit remain open |
+| 1 | Pinned compose, live Plasma, blank-disk install, disk-only boot/reboot passed on earlier accepted images | Repeat installation and disk-only boot for latest ISO; resolve live GRUB warnings; hardware and Secure Boot |
+| 2 | Packaged desktop/login/Plymouth identity; new-account and existing-preference preservation tests passed | Repeat relevant regressions on release candidate; broader scaling/accessibility/hardware coverage |
+| 3 | Optional setup RPM/launcher; live tools installation and installed-guest authorization cancellation passed | Steam/Proton, native-game baseline, controller, GameMode restoration, overlays, Gamescope and real GPU/driver tests; no NVIDIA installer implemented |
+| 4 | Profile editor, private atomic saves, fixed previews, reset, instance lock; profile-file hardening packaged in apps 0.1-4; automated tests passed | Monitoring, applied settings, narrow authorized helper and crash/reboot restoration not implemented; installed-app and accessibility acceptance pending |
+| 5 | Status/battery snapshots, confirmed unpair requests, native pairing launcher; automated and current live-VM smoke tests passed; basic phone link owner-tested PASS | Notifications/clipboard/transfers integration; real revocation, rejection, reconnect, permissions, multi-user and current installed-session tests |
+| 6 | No implementation | Optional Waydroid evaluation, implementation and all acceptance tests |
+| 7 | Unsigned manifest tool, recovery protocol, bounded security review and source-level remediation; security regressions and corrected compose/media checks passed | Corrected-image live/install checks, signed artifacts/custom-package updates, full CVE/runtime audit, update/failure/rescue tests, accessibility, multi-OS and hardware gates |
+| 8 | No public release | Prior gates, licensing/trademark clearance, supported-system evidence and authorized publication |
+
+### Latest image gates
+
+Newest artifact: `out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso`.
+It is the newest composed and media-checked image. The older
+`out/build-9BaEqZ1c` image remains the newest image with a recorded live-VM test.
+
+| Gate | Recorded result |
+| --- | --- |
+| Compose and media checks | PASS: wrapper/guest exit 0, checksum, ISO9660, UEFI catalog |
+| Unsigned artifact manifest | PENDING for this ISO; checksum exists but no source-revision manifest was created from the dirty build worktree |
+| Live VM | PENDING for this ISO; older `build-9BaEqZ1c` passed Plasma and Phone Panel smoke checks |
+| Fresh install and disk-only reboot | PENDING for this ISO; earlier images passed separately |
+| Basic real-phone linking | Owner reports PASS; exact image/device/feature scope unspecified |
+| Gaming performance | PENDING acceptance; owner reported about 10 FPS in VirtualBox with llvmpipe, not a physical GPU benchmark |
+| Display scaling | OPEN: owner reported VirtualBox scrollbars/fit issues; no confirmed resolution |
+| USB/hardware, Secure Boot, dual/triple boot | PENDING; no physical installation safety certification |
+
+### Remaining test order
+
+1. Complete corrected-image validation for the three [security findings](security-review-2026-09-30.md).
+   Source fixes, regression checks, compose and media checks passed on 2026-10-15.
+2. Verify the corrected image's live boot, clean VM install,
+   ISO-detached boot, first-run setup and repeated login/reboot. Check both apps,
+   display resize/scaling and that setup does not repeat for a configured account.
+3. Verify installed security state: SELinux enforcement, firewall/listeners,
+   live-account cleanup, permissions, update sources and complete package advisories.
+4. Run real-phone rejection/revocation/reconnect/permission/multi-user tests and
+   the documented gaming/controller/driver matrix against stock Fedora.
+5. Complete Stage 4-6 missing functionality before claiming their full gates.
+   Run Stage 7 normal/failed updates, backup restore, older-kernel/rescue,
+   accessibility and isolated multi-OS tests before physical triple-boot testing.
+6. Finish signed distribution/custom-package updates, reproducibility, licensing
+   and repeated hardware testing before any public release.
+
+Latest recorded automated run (2026-10-15): 48 configuration,
+13 Qt UI and 2 synthetic D-Bus tests passed, plus a separate five-case libdnf
+signature integration check. Earlier high-DPI smoke coverage is
+recorded separately; none of these results closes the pending runtime gates.
+
+## 2026-09-30 - Documentation reconciliation
+
+Updated README, roadmap, build/test, compatibility, gaming, phone, recovery and
+security/release guides to distinguish implementation, tested behavior and open
+gates. Corrected stale apps RPM version, phone capabilities and test-count text.
+Preserved historical evidence and the original product specification. No code,
+ISO, host configuration or user-owned probe files were changed. Documentation
+verification: `git diff --check` passed, and a read-only Python link check found
+all relative Markdown file targets present (external URLs/anchors not checked);
+application/VM tests were not rerun for these prose-only changes.
+
+## 2026-09-30 - Security review, prioritized findings
+
+Completed a first-party source/configuration review and selected upstream checks;
+see [security review](security-review-2026-09-30.md) for scope, evidence and limits.
+Priorities: P1 missing Fedora RPM signature enforcement during compose; P2
+unnecessary wildcard-bound builder SSH forwarding (remote compromise not proven);
+P3 local Gaming Center profile-file blocking. Unsigned distribution artifacts and
+the missing custom-package update channel remain separate release security gaps.
+
+Verification: `python3 -m unittest discover -s tests/config -v` passed 35 tests;
+`QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software out/stage4-venv/bin/python -m unittest discover -s tests/ui -v`
+passed 13; `dbus-run-session -- out/stage4-venv/bin/python tests/integration/test_phone_transport.py -v`
+passed 2 on an isolated synthetic bus after sandbox socket restrictions required
+a permitted rerun. A temporary FIFO profile-load reproducer confirmed blocking;
+its subprocess was terminated/reaped and its fixture removed. No personal data
+or host settings were changed. A nested-JSON probe did not reproduce a crash.
+
+This is not a complete ISO CVE scan or runtime security certification. No fixes,
+new ISO, installation tests or GitHub publication were performed in this review.
+
 ## 2026-09-30 - Current ISO verified; owner phone-link test passed
 
 The owner reports basic phone linking works: PASS (owner-tested). Exact phone,

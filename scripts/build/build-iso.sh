@@ -59,13 +59,23 @@ mkdir -p "$ROOT/out/box-cache"
 export KIWI_BOXED_CACHE_DIR="$ROOT/out/box-cache"
 python3 "$ROOT/scripts/build/fetch-box.py" "$KIWI_BOXED_CACHE_DIR"
 cp "$ROOT/image/builder.json" "$run/builder.json"
+# KIWI currently hard-codes a wildcard-bound SSH host forward into its QEMU
+# network arguments and has no supported disable switch. Interpose a strict
+# QEMU launcher: preserve user networking, remove only that exact forward, and
+# fail closed if the upstream arguments change or contain any other forward.
+qemu_real=$(command -v qemu-system-x86_64)
+qemu_shim_dir="$run/qemu-bin"
+mkdir "$qemu_shim_dir"
+install -m 700 "$ROOT/scripts/build/qemu-no-forward.sh" "$qemu_shim_dir/qemu-system-x86_64"
+export UJWALOS_REAL_QEMU="$qemu_real"
+export PATH="$qemu_shim_dir:$PATH"
 accel=(--cpu host)
 if [[ ! -r /dev/kvm || ! -w /dev/kvm ]]; then
     echo 'KVM unavailable: building with QEMU software emulation (TCG); this will be much slower.'
     accel=(--no-accel --cpu max)
 fi
 cmd=("${kiwi[@]}" --debug system boxbuild --box universal --no-update-check
-     --9p-sharing --box-memory 6G --box-smp-cpus 4 "${accel[@]}" kiwi
+     --9p-sharing --ssh-port 10022 --box-memory 6G --box-smp-cpus 4 "${accel[@]}" kiwi
      --description "$run/description" --target-dir "$run/result"
      --set-type-attr volid=UjwalOS-0.1-KDE-Live-44
      --set-type-attr application_id=UjwalOS-0.1-KDE_Desktop-Live-44
