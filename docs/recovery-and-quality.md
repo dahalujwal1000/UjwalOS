@@ -71,8 +71,11 @@ sudo dnf5 offline reboot
 This reboots and changes the guest. After login inspect `dnf5 offline status` and
 `dnf5 offline log --number=-1`; retain logs privately and redact before sharing.
 Verify boot, networking, desktop preferences and app launches. Offline RPM updates
-are not atomic whole-system rollback. The commands are upstream-documented but
-have not yet passed UjwalOS Stage 7 VM acceptance.
+are not atomic whole-system rollback. A small codec transaction passed on
+2026-10-16, followed by baseline checks and graphical KVM boot/app checks.
+The offline-log lookup returned no log; DNF history and installed package state
+provided the recorded evidence instead. This does not close the wider Stage 7
+kernel/rescue or interrupted-installation gates.
 
 ## Failure and rescue protocol
 
@@ -121,6 +124,8 @@ with the ISO checksum and VM evidence, reviewing it before sharing.
 This checker supports baseline collection before and after update/recovery tests.
 It does not execute those tests or certify hardware, update sources, package
 advisories, multi-user permissions, signing or release readiness.
+It does not check the display manager's user units: an all-PASS baseline can
+coexist with a failed graphical login. Always observe desktop login separately.
 
 ## Acceptance record
 
@@ -135,15 +140,15 @@ checks; runtime and installed-image acceptance remain separate. See the
 | Gate | Required evidence |
 | --- | --- |
 | Current image clean install | PASS 2026-10-16: blank virtual disk, ISO detached, first login, reboot and second login; see status |
-| Normal update | Before/after package records, transaction log, boot and app checks |
-| Failed-update recovery | Failure injected in clone, recovery steps, restored boot/data |
+| Normal update | PASS for the recorded small codec transaction; kernel/core updates remain untested |
+| Failed-update recovery | Pre-transaction network failure and subsequent KVM boot passed; interrupted installation/rescue remains open |
 | Older-kernel/rescue | Boot menu access, older-kernel boot, rescue access and data recovery |
 | Dual boot | Layout/firmware review and isolated multi-OS VM test; no host edits |
 | Accessibility | Keyboard/focus, screen reader, contrast, scaling and external display results |
 | Hardware | Repeated checks on multiple systems with limitations recorded |
 | Public artifacts | Licensing, input archive/repeat builds, signing and trusted key distribution |
 | Security remediation | Source regression tests and corrected ISO VM checks passed; broader runtime security gates remain open |
-| Custom-package updates | Authenticated source and successful delivery of a newer UjwalOS RPM in an installed guest |
+| Custom-package updates | Local engineering 0.1-4 to 0.1-5 update and app launch passed; authenticated delivery/signing remains open |
 | Runtime security | Full package advisory review, SELinux, firewall/listeners, account cleanup and multi-user tests |
 
 ## Sources
@@ -161,4 +166,5 @@ Verified 2026-09-29: [DNF5 upgrade](https://dnf5.readthedocs.io/en/latest/comman
 documents offline staging; [DNF5 offline](https://dnf5.readthedocs.io/en/latest/commands/offline.8.html)
 documents status, transaction logs and reboot execution. Fedora's GRUB quick-doc
 page was access-blocked during review, so no version-specific bootloader repair
-commands are prescribed here. Installed-guest command/version checks remain open.
+commands are prescribed here. DNF5 5.4.6.0 guest command checks and the limited
+transaction evidence are recorded in [status](status.md); wider recovery remains open.

@@ -1,8 +1,9 @@
 # Roadmap
 
 The full scope and acceptance wording are preserved in [plan.md](../plan.md).
-As of 2026-10-15, the newest ISO passed compose and media checks; live boot and
-installation are pending. The older 2026-09-30 ISO passed live Plasma boot.
+As of 2026-10-16, the accepted apps 0.1-4 ISO passed compose, media, live boot,
+fresh installation and disk-only reboot/login checks. Apps 0.1-5 separately
+passed installed-VM graphical monitoring checks; its new compose is in progress.
 Stages 1 and 2 acceptance passed on earlier recorded images. Separate gate
 evidence and remaining release limits are in the
 [current acceptance summary](status.md#current-acceptance-summary). The table
@@ -26,7 +27,7 @@ login and Plymouth identity; and pass fresh-account and update-preservation
 validation. Stage 3 optional gaming-setup implementation is complete; acceptance
 testing remains pending, including games, baseline comparisons and hardware. Stage 4 has
 started with a tested Qt profile editor; its [requirements](gaming-center.md)
-track pending monitoring, authorization, restoration and VM gates. Stage 5 now
+track opt-in system monitoring and pending authorization/restoration gates. Stage 5 now
 has a status/battery panel, confirmed unpair requests and native KDE Connect
 pairing launcher in apps 0.1-4. Earlier live-VM smoke tests and owner-reported
 basic phone linking passed; [phone requirements](phone-panel.md) track remaining
@@ -34,13 +35,14 @@ transfers, permissions, revocation and real-device acceptance. Hardware and
 release-limit reviews remain open.
 
 Stage 7 started on 2026-09-29 with a local artifact integrity verifier and
-[recovery/quality protocol](recovery-and-quality.md). Recovery VM tests,
-accessibility, dual-boot review and repeated hardware tests remain pending.
+[recovery/quality protocol](recovery-and-quality.md). Cold-copy restore, a small
+offline update and network-staging failure passed in a VM. Interrupted update,
+kernel/rescue, accessibility, dual-boot and repeated hardware tests remain pending.
 Stage 6 remains unimplemented; starting Stage 7 does not close earlier gates.
 
 The bounded [security review](security-review-2026-09-30.md) is recorded. Source
 remediation and regression checks for its three findings passed on 2026-10-15;
-the corrected ISO passed compose and media checks, with live boot and installation
-pending. Signed artifacts, custom-package security updates and a full
+the corrected ISO passed compose, media, live boot and installation.
+Signed artifacts, authenticated custom-package updates and a full
 distribution/runtime audit remain release work; Stage 8 has not started and
 public release readiness is not claimed.

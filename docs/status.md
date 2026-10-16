@@ -1,5 +1,38 @@
 # Status and unreleased notes
 
+## 2026-10-16 - Monitoring graphical acceptance and compose retry
+
+At resume the recovery VM was no longer running. Its serial evidence was
+preserved as `out/vm-recovery-QgQ9GZNd/serial-update-evidence.log` before launch.
+`qemu-img check out/vm-recovery-QgQ9GZNd/disk.qcow2` reported no errors.
+`UJWALOS_VM_ACCEL=kvm scripts/test/test-iso.sh --installed
+out/vm-recovery-QgQ9GZNd --headless` now ran successfully: QMP status running,
+branded graphical login, authenticated Plasma desktop, no OS ISO attached.
+This also establishes graphical boot after the earlier failed-staging test.
+
+Installed Gaming Center 0.1-5 launched via
+`python3 /usr/share/ujwalos/gaming-center/main.py` in the ordinary user's
+graphical session. Monitoring was initially off, enabling the switch displayed
+CPU and estimated memory usage, and disabling/closing/reopening returned to off.
+Screenshots: `kvm-login.png`, `desktop-new.png`, `metrics-window.png`,
+`metrics-enabled.png`, `metrics-reopened.png` in that VM directory. Guest
+`systemctl poweroff` completed and QEMU exited 0. No host reboot occurred.
+
+The earlier TCG greeter failure is not claimed fixed. Its journal showed KWin
+unable to open `/dev/dri/card1` and no suitable DRM device; greeter user units
+failed even while the system-level `systemctl --failed` list was empty. The
+baseline checker is deliberately scoped and does not establish graphical health.
+KVM working on retry does not establish the cause of its earlier entry failure.
+
+Independent lower-cost read-only review found no concrete monitoring bugs;
+eight metrics and six Gaming Center UI tests passed. Parent reran
+`python3 -m unittest discover -s tests/config -q`: 75 passed.
+`scripts/build/build-iso.sh --validate` passed in `out/build-9K9HoH5I`.
+An isolated `scripts/build/build-iso.sh` run was then started; no new ISO
+success or VM acceptance is inferred until its result is recorded.
+Build command options rechecked 2026-10-16 against
+[KIWI boxbuild](https://osinside.github.io/kiwi/commands/system_boxbuild.html).
+
 ## 2026-10-16 - Monitoring and recovery work in progress
 
 New source adds opt-in, read-only aggregate CPU/memory monitoring to Gaming
@@ -265,8 +298,8 @@ Sources verified 2026-10-15: [signature policy](../image/README.md),
 
 ## Current acceptance summary
 
-Baseline reconciled 2026-09-30; see the 2026-10-15 remediation entry above for
-new source changes and checks. PASS applies only to the
+Baseline reconciled 2026-10-16; see the newest entries above for source,
+package and VM evidence. PASS applies only to the
 recorded artifact and test scope, not automatically to newer images. Documentation
 updates do not constitute new implementation, security fixes or test execution.
 
@@ -276,10 +309,10 @@ updates do not constitute new implementation, security fixes or test execution.
 | 1 | Pinned compose; newest corrected ISO passed UEFI live Plasma, blank-disk install, ISO-detached boot, first login, reboot and second login | Resolve live GRUB warnings; hardware and Secure Boot |
 | 2 | Packaged desktop/login/Plymouth identity; new-account and existing-preference preservation tests passed | Repeat relevant regressions on release candidate; broader scaling/accessibility/hardware coverage |
 | 3 | Optional setup RPM/launcher; live tools installation and installed-guest authorization cancellation passed | Steam/Proton, native-game baseline, controller, GameMode restoration, overlays, Gamescope and real GPU/driver tests; no NVIDIA installer implemented |
-| 4 | Profile editor, private atomic saves, fixed previews, reset, instance lock; profile-file hardening packaged in apps 0.1-4; automated tests and latest live-image launch passed | Monitoring, applied settings, narrow authorized helper and crash/reboot restoration not implemented; installed-session and accessibility acceptance pending |
+| 4 | Profile editor, private atomic saves, fixed previews, reset, instance lock; apps 0.1-5 adds opt-in aggregate CPU/memory monitoring with installed-VM graphical acceptance | New ISO integration, per-game applied state, authorized settings/restoration and accessibility remain open |
 | 5 | Status/battery snapshots, confirmed unpair requests, native pairing launcher; automated and current live-VM smoke tests passed; basic phone link owner-tested PASS | Notifications/clipboard/transfers integration; real revocation, rejection, reconnect, permissions, multi-user and current installed-session tests |
 | 6 | No implementation | Optional Waydroid evaluation, implementation and all acceptance tests |
-| 7 | Unsigned manifest tool, recovery protocol, bounded security review and source-level remediation; security regressions and corrected compose/media/live/install/reboot checks passed | Signed artifacts/custom-package updates, full CVE/runtime audit, update/failure/rescue tests, accessibility, multi-OS and hardware gates |
+| 7 | Manifest/checker tools, cold-copy restore, codec offline update, failed-network staging, local app RPM upgrade and subsequent graphical boot passed | Signing/authenticated delivery, full CVE/runtime audit, interrupted installation, kernel/rescue, accessibility, multi-OS and hardware gates |
 | 8 | No public release | Prior gates, licensing/trademark clearance, supported-system evidence and authorized publication |
 
 ### Latest image gates
@@ -314,9 +347,9 @@ It is the newest composed, media-checked and VM-tested image.
 6. Finish signed distribution/custom-package updates, reproducibility, licensing
    and repeated hardware testing before any public release.
 
-Latest recorded automated run (2026-10-15): 48 configuration,
-13 Qt UI and 2 synthetic D-Bus tests passed, plus a separate five-case libdnf
-signature integration check. Earlier high-DPI smoke coverage is
+Latest recorded automated run (2026-10-16): 75 configuration,
+14 Qt UI and 2 synthetic D-Bus tests passed. Earlier libdnf signature checks
+and current 200% high-DPI smoke coverage are
 recorded separately; none of these results closes the pending runtime gates.
 
 ## 2026-09-30 - Documentation reconciliation

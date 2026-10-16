@@ -17,8 +17,8 @@ setup, login, reboot and second login. Triple boot with Windows and Fedora,
 shared EFI-partition coexistence, hardware and Secure Boot are not validated.
 See [status](docs/status.md) for separate image and test evidence.
 
-Documentation reconciled 2026-10-16. The VM milestone's automated run passed
-**63 tests: 48 configuration, 13 Qt UI and 2 isolated D-Bus tests**. These are
+Documentation reconciled 2026-10-16. The latest monitoring milestone passed
+**91 tests: 75 configuration, 14 Qt UI and 2 isolated D-Bus tests**. These are
 not hardware or security certification. The [security review](docs/security-review-2026-09-30.md)
 is complete within its stated scope. Source fixes for its three findings—compose
 signature enforcement, builder SSH exposure and profile-file blocking—now pass
@@ -38,7 +38,7 @@ test results and package-versus-ISO scope.
 | **1 — Bootable v0.1** | Fedora KDE live ISO with minimal UjwalOS branding | ✅ Complete |
 | **2 — Desktop identity** | Taskbar layout, theme, wallpaper, login, boot splash | ✅ Complete |
 | 3 — Gaming foundation | Optional gaming setup; game and hardware validation | Implementation complete; testing pending |
-| 4 — Gaming Center | Qt/QML app, profiles, per-game settings | In progress: profile editor |
+| 4 — Gaming Center | Qt/QML app, profiles, per-game settings | In progress: profiles and opt-in system metrics |
 | 5 — Android continuity | KDE Connect phone panel | Basic phone link passed (owner-tested); remaining features/gates open |
 | 6 — Android apps | Optional Waydroid experiment | ⬜ Not started |
 | 7 — Recovery & release | Updates, recovery, accessibility, hardware testing | In progress: artifact verifier and recovery protocol |
