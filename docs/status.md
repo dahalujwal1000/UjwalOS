@@ -1,5 +1,35 @@
 # Status and unreleased notes
 
+## 2026-10-16 - Installed guest baseline checker
+
+Implemented `scripts/test/check-installed-system.py` with an explicit
+`--guest-check` acknowledgement, fixed read-only commands, five-second command
+timeouts, locale-stable parsing and JSON PASS/FAIL/UNKNOWN results. It checks
+root-source shape, SELinux, firewalld, the three installed UjwalOS packages and
+their file integrity, local `liveuser` absence and TCP/UDP ports 22/10022.
+RPM verification suppresses verification scripts; account lookup uses local
+files. Reports omit account records and full listener lists. Reported diagnostics
+are truncated; subprocess capture itself is not a hard memory-bound interface.
+
+A lower-cost implementation agent wrote the checker and tests; integration review
+added stricter parsing, locale handling, redaction and ambiguous-output cases.
+The recovery guide now includes the command and limits and corrects stale
+installation status. Upstream command sources and verification date are recorded
+in [the recovery guide](recovery-and-quality.md#sources).
+
+Verification: `python3 -m unittest discover -s tests/config -q` passed all
+64 tests (48 existing plus 16 checker tests). `git diff --check` passed.
+Checker tests use mocked command responses, including timeout, absent tools,
+malformed records, integrity failures, account privacy and CLI exit status.
+UI and D-Bus suites were not rerun for this standalone tooling change.
+
+Code and automated checks are complete for this milestone. The new checker has
+not yet run in a guest and is not included in the existing ISO. No new compose,
+VM boot, installation or hardware test is claimed. Next: collect its baseline
+inside the installed guest, preserve a cold VM backup, verify restoration, then
+exercise normal and failed-update recovery on disposable copies. Signing,
+licensing and the wider runtime/release gates remain open.
+
 ## 2026-10-16 - Corrected ISO VM installation acceptance
 
 The corrected ISO `out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso`

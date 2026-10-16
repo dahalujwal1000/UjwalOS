@@ -17,7 +17,7 @@ setup, login, reboot and second login. Triple boot with Windows and Fedora,
 shared EFI-partition coexistence, hardware and Secure Boot are not validated.
 See [status](docs/status.md) for separate image and test evidence.
 
-Documentation reconciled 2026-10-16. The latest recorded automated run passed
+Documentation reconciled 2026-10-16. The VM milestone's automated run passed
 **63 tests: 48 configuration, 13 Qt UI and 2 isolated D-Bus tests**. These are
 not hardware or security certification. The [security review](docs/security-review-2026-09-30.md)
 is complete within its stated scope. Source fixes for its three findings—compose
@@ -26,6 +26,9 @@ regression checks; the newest ISO above contains these source changes and passed
 the VM sequence described above. See the
 [acceptance summary](docs/status.md#current-acceptance-summary) for completed work,
 pending implementation and remaining testing.
+
+The subsequent guest-checker tooling milestone passed 64 configuration tests,
+including 16 new checker tests; its guest execution remains pending.
 
 | Stage | Description | Status |
 |-------|-------------|--------|
@@ -131,6 +134,13 @@ sizes without signing, publishing or claiming release readiness. Update/recovery
 accessibility, dual-boot and repeated hardware acceptance remain pending.
 This work does not close the unfinished Stage 3-6 gates; recovery tooling/docs
 remain repository tools.
+
+A read-only installed-guest baseline checker is available at
+`scripts/test/check-installed-system.py --guest-check`. It reports scoped
+SELinux, firewall, package-integrity, local live-account and listener checks as
+JSON. See the [guest-check protocol](docs/recovery-and-quality.md#installed-guest-baseline-checker)
+for execution context, exit codes and limits. This tool is not included in the
+previously built ISO; its automated tests do not establish a new guest test.
 
 ## Project documents
 

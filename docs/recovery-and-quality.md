@@ -91,19 +91,48 @@ have not yet passed UjwalOS Stage 7 VM acceptance.
   encryption recovery material before updates. Hardware recovery and dual-boot
   repair procedures remain unvalidated; do not infer safety from VM results.
 
-## Acceptance record (all pending)
+## Installed guest baseline checker
+
+Inside a disposable installed test guest with the ISO detached, run a reviewed
+copy of the repository script as the normal desktop user:
+
+```sh
+python3 scripts/test/check-installed-system.py --guest-check
+```
+
+The explicit flag acknowledges the intended guest context; it does not detect a
+VM or prove the ISO is detached. The checker emits JSON to stdout, with separate
+PASS, FAIL or UNKNOWN results for the root mount source, SELinux enforcement,
+firewalld activity, the three UjwalOS packages and their RPM file verification,
+local `liveuser` cleanup, and listening TCP/UDP ports 22 and 10022. Exit codes are
+0 for all checks passing, 1 for any failure, and 2 for incomplete evidence.
+Missing tools, timeouts and unrecognized output require investigation.
+
+Commands are read-only and have time limits. RPM verification uses `--noscripts`
+to suppress package verification scriptlets; account lookup uses the local files
+database. No privilege escalation or repair is performed. A port check covers
+only the specified ports; it cannot identify SSH on an arbitrary port or establish
+firewall policy correctness. RPM verification compares installed files to the
+local package database and does not authenticate the publisher. Retain the JSON
+with the ISO checksum and VM evidence, reviewing it before sharing.
+
+This checker supports baseline collection before and after update/recovery tests.
+It does not execute those tests or certify hardware, update sources, package
+advisories, multi-user permissions, signing or release readiness.
+
+## Acceptance record
 
 The table below covers operational/release gates, not the completed artifact-tool
-milestone. As of 2026-10-15, artifact-tool unit tests and the recorded manifest
-verification passed. The corrected ISO passed compose and media checks, while
-live boot, fresh installation and disk-only boot remain pending. The bounded
+milestone. As of 2026-10-16, artifact-tool unit tests and the recorded manifest
+verification passed. The corrected ISO passed compose, media checks, live boot,
+fresh installation, ISO-detached setup/login, reboot and second login. The bounded
 security review's three findings have source fixes and passing regression
 checks; runtime and installed-image acceptance remain separate. See the
 [consolidated evidence](status.md#current-acceptance-summary).
 
 | Gate | Required evidence |
 | --- | --- |
-| Current image clean install | Blank virtual disk, ISO detached, two logins/reboots |
+| Current image clean install | PASS 2026-10-16: blank virtual disk, ISO detached, first login, reboot and second login; see status |
 | Normal update | Before/after package records, transaction log, boot and app checks |
 | Failed-update recovery | Failure injected in clone, recovery steps, restored boot/data |
 | Older-kernel/rescue | Boot menu access, older-kernel boot, rescue access and data recovery |
@@ -111,11 +140,20 @@ checks; runtime and installed-image acceptance remain separate. See the
 | Accessibility | Keyboard/focus, screen reader, contrast, scaling and external display results |
 | Hardware | Repeated checks on multiple systems with limitations recorded |
 | Public artifacts | Licensing, input archive/repeat builds, signing and trusted key distribution |
-| Security remediation | Source fixes, signature rejection tests and builder listener restriction have regression evidence; corrected ISO compose/media checks passed, but runtime retest and security gates remain open |
+| Security remediation | Source regression tests and corrected ISO VM checks passed; broader runtime security gates remain open |
 | Custom-package updates | Authenticated source and successful delivery of a newer UjwalOS RPM in an installed guest |
 | Runtime security | Full package advisory review, SELinux, firewall/listeners, account cleanup and multi-user tests |
 
 ## Sources
+
+Checker command semantics verified 2026-10-16 against upstream
+[RPM verification](https://rpm.org/docs/6.0.x/man/rpm.8),
+[getent](https://man7.org/linux/man-pages/man1/getent.1.html),
+[findmnt](https://man7.org/linux/man-pages/man8/findmnt.8.html),
+[ss](https://man7.org/linux/man-pages/man8/ss.8.html),
+[getenforce](https://man7.org/linux/man-pages/man8/getenforce.8.html), and
+[systemctl source documentation](https://github.com/systemd/systemd/blob/main/man/systemctl.xml).
+The rendered systemd manual was access-blocked; its upstream source was used.
 
 Verified 2026-09-29: [DNF5 upgrade](https://dnf5.readthedocs.io/en/latest/commands/upgrade.8.html)
 documents offline staging; [DNF5 offline](https://dnf5.readthedocs.io/en/latest/commands/offline.8.html)
