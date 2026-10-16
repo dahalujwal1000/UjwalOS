@@ -2,14 +2,15 @@
 
 ## Current acceptance and security limits
 
-As of 2026-10-15, the latest corrected ISO is
+As of 2026-10-16, the latest corrected ISO is
 `out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso` (3,834,904,576 bytes;
 SHA-256 `a1efa6cc0dfb5beb94e64fab11c658a20463980cbc9f8875295a3a6c3cf38775`).
-Compose, checksum, ISO9660 and UEFI boot-catalog checks passed. Live boot,
-fresh installation and disk-only boot for this image are pending; earlier
-images' passes do not transfer to it. No public release or redistribution
+Compose, checksum, ISO9660 and UEFI boot-catalog checks passed. This exact image
+also passed a UEFI live Plasma boot, both custom-app smoke tests, fresh
+installation to a 40 GiB QCOW2, ISO-detached first boot/setup/login, reboot and
+second login. No public release or redistribution
 clearance is claimed. See the [acceptance summary](status.md#current-acceptance-summary)
-and the dated [status evidence](status.md#2026-10-15---security-remediation-and-corrected-compose).
+and the dated [status evidence](status.md#2026-10-16---corrected-iso-vm-installation-acceptance).
 
 Source remediation dated 2026-10-15 addresses the
 [security review](security-review-2026-09-30.md) findings with Fedora RPM signature

@@ -2,11 +2,11 @@
 
 ## Release title
 
-UjwalOS 0.1 experimental VM test image (2026-10-15)
+UjwalOS 0.1 experimental VM test image (2026-10-16)
 
 ## Suggested tag
 
-`v0.1-vmtest-20261015`
+`v0.1-vmtest-20261016`
 
 ## Classification
 
@@ -72,8 +72,9 @@ booted with the ISO detached, and any screenshots or exact error messages.
 
 ## Known limitations
 
-- Live boot and fresh installation of this exact image have not yet been
-  recorded as passed.
+- On 2026-10-16 this exact image passed UEFI live Plasma boot, Gaming Center
+  and Phone Panel smoke tests, fresh installation to a 40 GiB QCOW2,
+  ISO-detached first-run setup/login, reboot and second login.
 - Physical USB boot, Secure Boot, GPU acceleration, controller support,
   suspend/resume and dual/triple boot are untested.
 - VirtualBox software rendering is not a gaming-performance benchmark.

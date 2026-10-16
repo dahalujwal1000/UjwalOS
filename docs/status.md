@@ -1,5 +1,49 @@
 # Status and unreleased notes
 
+## 2026-10-16 - Corrected ISO VM installation acceptance
+
+The corrected ISO `out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso`
+(3,834,904,576 bytes; SHA-256
+`a1efa6cc0dfb5beb94e64fab11c658a20463980cbc9f8875295a3a6c3cf38775`)
+completed its isolated QEMU/KVM acceptance sequence. The VM used UEFI firmware,
+a newly created 40 GiB file-backed QCOW2 disk, QEMU user networking and local
+Unix sockets. No physical disk, host boot entry or host package was changed.
+
+Exact commands and recorded results:
+
+- `cd out/build-6KtHtk1p/result && sha256sum -c SHA256SUMS`: passed.
+- `scripts/test/test-iso.sh out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso --check-only`:
+  passed SHA-256, ISO9660 and UEFI boot-catalog checks.
+- `scripts/test/test-iso.sh out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso --headless`:
+  UEFI GRUB rendered and the live session reached usable KDE Plasma. Gaming
+  Center and Phone Panel both launched. In the live guest, `rpm -q` reported
+  `ujwalos-apps-0.1-4.fc44.noarch`, `ujwalos-branding-0.4-1.fc44.noarch` and
+  `ujwalos-gaming-setup-0.1-1.fc44.noarch`; `rpm -V` emitted no differences,
+  `getenforce` returned `Enforcing`, and `systemctl is-active firewalld`
+  returned `active`. `ss -lntup` showed no SSH or port 10022 listener.
+- Anaconda selected only the 42.9 GB Virtio device (`vda`), completed the fresh
+  installation and displayed `Successfully installed`. The VM directory is
+  `out/vm-oU7JxgZx`; screenshots are retained there as local test evidence.
+- `scripts/test/test-iso.sh --installed out/vm-oU7JxgZx --headless`: booted the
+  same QCOW2 with no ISO attached. Plasma Initial System Setup created a
+  disposable account, login reached the branded desktop, and `/` was mounted
+  from `/dev/vda3[/root]`. Installed package versions and `rpm -V`, SELinux,
+  firewall and listener results matched the live checks. A reboot returned to
+  the login screen and the second login reached Plasma successfully.
+- Post-documentation regression run: `python3 -m unittest discover -s
+  tests/config -v` passed 48 tests; `QT_QPA_PLATFORM=offscreen
+  QT_QUICK_BACKEND=software out/stage4-venv/bin/python -m unittest discover -s
+  tests/ui -v` passed 13 tests; and `dbus-run-session --
+  out/stage4-venv/bin/python tests/integration/test_phone_transport.py -v`
+  passed two tests. The relative Markdown file-link check and
+  `git diff --check` also passed.
+
+This closes the latest image's VM live/install/reboot gates only. Display-resize
+acceptance was not separately exercised. Physical hardware, USB installation,
+Secure Boot, dual/triple boot, gaming performance, full advisory/runtime review,
+signed custom-package updates, licensing and Fedora trademark/remix review
+remain open. No public release is approved.
+
 ## 2026-10-15 - Security remediation and corrected compose
 
 Implemented the three findings from the September security review:
@@ -62,8 +106,9 @@ Verification commands/results:
   `ea06ce5597746df56a5cc7c3bd184a8e0b05eec048f60456b0b9469fc59a0cdc`.
 
 Code, local RPM preparation and corrected ISO compose/media checks are complete;
-live boot, fresh installation and disk-only reboot are pending. No hardware test or public release
-is claimed. Host packages, physical disks and boot entries were not changed.
+the 2026-10-16 entry records its live boot, fresh installation and disk-only
+reboot. No hardware test or public release is claimed. Host packages, physical
+disks and boot entries were not changed.
 A full distribution advisory/runtime audit remains pending. Signed artifacts
 and custom-package updates remain open.
 
@@ -81,27 +126,26 @@ updates do not constitute new implementation, security fixes or test execution.
 | Stage | Completed implementation / evidence | Remaining implementation or testing |
 | --- | --- | --- |
 | 0 | Specification, architecture decision, initial threat model and build plan | Release input snapshots, licensing and complete dependency audit remain open |
-| 1 | Pinned compose, live Plasma, blank-disk install, disk-only boot/reboot passed on earlier accepted images | Repeat installation and disk-only boot for latest ISO; resolve live GRUB warnings; hardware and Secure Boot |
+| 1 | Pinned compose; newest corrected ISO passed UEFI live Plasma, blank-disk install, ISO-detached boot, first login, reboot and second login | Resolve live GRUB warnings; hardware and Secure Boot |
 | 2 | Packaged desktop/login/Plymouth identity; new-account and existing-preference preservation tests passed | Repeat relevant regressions on release candidate; broader scaling/accessibility/hardware coverage |
 | 3 | Optional setup RPM/launcher; live tools installation and installed-guest authorization cancellation passed | Steam/Proton, native-game baseline, controller, GameMode restoration, overlays, Gamescope and real GPU/driver tests; no NVIDIA installer implemented |
-| 4 | Profile editor, private atomic saves, fixed previews, reset, instance lock; profile-file hardening packaged in apps 0.1-4; automated tests passed | Monitoring, applied settings, narrow authorized helper and crash/reboot restoration not implemented; installed-app and accessibility acceptance pending |
+| 4 | Profile editor, private atomic saves, fixed previews, reset, instance lock; profile-file hardening packaged in apps 0.1-4; automated tests and latest live-image launch passed | Monitoring, applied settings, narrow authorized helper and crash/reboot restoration not implemented; installed-session and accessibility acceptance pending |
 | 5 | Status/battery snapshots, confirmed unpair requests, native pairing launcher; automated and current live-VM smoke tests passed; basic phone link owner-tested PASS | Notifications/clipboard/transfers integration; real revocation, rejection, reconnect, permissions, multi-user and current installed-session tests |
 | 6 | No implementation | Optional Waydroid evaluation, implementation and all acceptance tests |
-| 7 | Unsigned manifest tool, recovery protocol, bounded security review and source-level remediation; security regressions and corrected compose/media checks passed | Corrected-image live/install checks, signed artifacts/custom-package updates, full CVE/runtime audit, update/failure/rescue tests, accessibility, multi-OS and hardware gates |
+| 7 | Unsigned manifest tool, recovery protocol, bounded security review and source-level remediation; security regressions and corrected compose/media/live/install/reboot checks passed | Signed artifacts/custom-package updates, full CVE/runtime audit, update/failure/rescue tests, accessibility, multi-OS and hardware gates |
 | 8 | No public release | Prior gates, licensing/trademark clearance, supported-system evidence and authorized publication |
 
 ### Latest image gates
 
 Newest artifact: `out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso`.
-It is the newest composed and media-checked image. The older
-`out/build-9BaEqZ1c` image remains the newest image with a recorded live-VM test.
+It is the newest composed, media-checked and VM-tested image.
 
 | Gate | Recorded result |
 | --- | --- |
 | Compose and media checks | PASS: wrapper/guest exit 0, checksum, ISO9660, UEFI catalog |
 | Unsigned artifact manifest | PENDING for this ISO; checksum exists but no source-revision manifest was created from the dirty build worktree |
-| Live VM | PENDING for this ISO; older `build-9BaEqZ1c` passed Plasma and Phone Panel smoke checks |
-| Fresh install and disk-only reboot | PENDING for this ISO; earlier images passed separately |
+| Live VM | PASS 2026-10-16: UEFI GRUB, Plasma, Gaming Center and Phone Panel |
+| Fresh install and disk-only reboot | PASS 2026-10-16: 40 GiB QCOW2, ISO detached, setup/login/reboot/second login |
 | Basic real-phone linking | Owner reports PASS; exact image/device/feature scope unspecified |
 | Gaming performance | PENDING acceptance; owner reported about 10 FPS in VirtualBox with llvmpipe, not a physical GPU benchmark |
 | Display scaling | OPEN: owner reported VirtualBox scrollbars/fit issues; no confirmed resolution |
@@ -109,13 +153,12 @@ It is the newest composed and media-checked image. The older
 
 ### Remaining test order
 
-1. Complete corrected-image validation for the three [security findings](security-review-2026-09-30.md).
-   Source fixes, regression checks, compose and media checks passed on 2026-10-15.
-2. Verify the corrected image's live boot, clean VM install,
-   ISO-detached boot, first-run setup and repeated login/reboot. Check both apps,
-   display resize/scaling and that setup does not repeat for a configured account.
-3. Verify installed security state: SELinux enforcement, firewall/listeners,
-   live-account cleanup, permissions, update sources and complete package advisories.
+1. Complete remaining corrected-image security validation. Source fixes,
+   regression checks, compose/media checks and scoped runtime checks passed.
+2. Finish the untested runtime scope: display resize/scaling, live-account
+   cleanup, permissions, update sources and complete package advisories.
+3. Repeat relevant VM gates for any later release-candidate image; results do
+   not transfer automatically between artifacts.
 4. Run real-phone rejection/revocation/reconnect/permission/multi-user tests and
    the documented gaming/controller/driver matrix against stock Fedora.
 5. Complete Stage 4-6 missing functionality before claiming their full gates.

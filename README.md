@@ -10,20 +10,20 @@ source fixes):
 `out/build-6KtHtk1p/result/UjwalOS-0.1.x86_64-44-0.iso`
 (3,834,904,576 bytes; SHA-256
 `a1efa6cc0dfb5beb94e64fab11c658a20463980cbc9f8875295a3a6c3cf38775`).
-Compose, checksum, ISO9660 and UEFI catalog/media checks passed. Live boot,
-fresh installation and installed-disk boot are pending for this ISO. The older
-`out/build-9BaEqZ1c` image is the latest image with a recorded live Plasma boot;
-it does not contain the security fixes. Triple boot with Windows and Fedora,
+Compose, checksum, ISO9660 and UEFI catalog/media checks passed. On 2026-10-16
+this exact ISO passed a UEFI live Plasma boot, both custom-app smoke tests, a
+fresh installation to a 40 GiB file-backed disk, ISO-detached boot, first-run
+setup, login, reboot and second login. Triple boot with Windows and Fedora,
 shared EFI-partition coexistence, hardware and Secure Boot are not validated.
 See [status](docs/status.md) for separate image and test evidence.
 
-Documentation reconciled 2026-10-15. The latest recorded automated run passed
+Documentation reconciled 2026-10-16. The latest recorded automated run passed
 **63 tests: 48 configuration, 13 Qt UI and 2 isolated D-Bus tests**. These are
 not hardware or security certification. The [security review](docs/security-review-2026-09-30.md)
 is complete within its stated scope. Source fixes for its three findings—compose
 signature enforcement, builder SSH exposure and profile-file blocking—now pass
-regression checks; the newest ISO above contains these source changes but has
-not yet been boot-tested. See the
+regression checks; the newest ISO above contains these source changes and passed
+the VM sequence described above. See the
 [acceptance summary](docs/status.md#current-acceptance-summary) for completed work,
 pending implementation and remaining testing.
 
@@ -47,14 +47,15 @@ pending implementation and remaining testing.
 | Package resolution & download | ✅ PASS — all RPMs resolved and installed inside disposable builder |
 | SELinux file contexts applied | ✅ PASS |
 | ISO filesystem (mkfs.erofs) | PASS: fragments disabled; LZMA compression retained |
-| ISO built | PASS: corrected image in `out/build-0QH6om9N/result/` |
-| Live boot in VM | PASS: KDE Plasma reached |
-| Installer and installation | PASS: fresh 40 GiB file-backed disk |
-| Installed system boots | PASS: ISO detached, first-run setup, login, restart and second login |
+| ISO built | PASS: newest corrected image in `out/build-6KtHtk1p/result/` |
+| Live boot in VM | PASS (2026-10-16): UEFI GRUB and KDE Plasma reached |
+| Installer and installation | PASS (2026-10-16): fresh 40 GiB file-backed disk |
+| Installed system boots | PASS (2026-10-16): ISO detached, first-run setup, login, restart and second login |
 
 The EROFS compose failure is resolved. The first VM installation exposed a
-build-only GRUB BLS path that prevented installed boot; the corrected ISO clears
-that path and passed a fresh installation and disk-only boot test. See
+build-only GRUB BLS path that prevented installed boot; corrected images clear
+that path. The newest security-remediated ISO passed a fresh installation and
+disk-only boot test on 2026-10-16. See
 [docs/status.md](docs/status.md) for checksums, logs and separate test gates.
 This is an internal engineering image, not a public release. Hardware, Secure
 Boot and gaming acceptance remain open; phone-test scope is recorded below.
@@ -103,7 +104,8 @@ The latest combined automated results are recorded above; earlier Qt smoke tests
 also passed at 200% scale. These do not establish full accessibility acceptance.
 Runtime monitoring, authorized system integration and crash/reboot restoration
 are not implemented yet. The editor is now packaged in `ujwalos-apps` 0.1-4
-and included in the newest built ISO above; its live boot remains pending.
+and included in the newest built ISO above; it launched successfully in that
+ISO's live session on 2026-10-16.
 Stage 3 hardware/game gates stay open.
 
 ### Stage 5 detail
@@ -118,7 +120,8 @@ display and an explicit KDE Connect launcher. Pairing, acceptance and cancellati
 use KDE Connect's UI; direct pairing calls were removed after upstream review
 identified a race with incoming requests. Notifications, clipboard, transfers and
 broader real-device acceptance remain pending. The updated RPM is `ujwalos-apps`
-0.1-4 in the newest built ISO; live boot and installation remain pending.
+0.1-4 in the newest built ISO; the panel launched successfully in that ISO's
+live session, and the ISO completed installation and disk-only boot.
 
 ### Stage 7 detail
 
