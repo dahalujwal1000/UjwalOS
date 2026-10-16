@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from PySide6.QtCore import QObject, QLockFile
@@ -45,6 +46,32 @@ class CenterTests(unittest.TestCase):
             self.assertFalse(center.save(-1, "Game", False, False))
             self.assertEqual(path.read_text(), "broken")
 
+    def test_monitoring_is_opt_in_and_stop_clears_measurements(self):
+        with tempfile.TemporaryDirectory() as directory, patch("main.MetricsCollector") as factory:
+            center = Controller(Path(directory) / "profiles.json")
+            factory.assert_not_called()
+            center.sampleMetrics()
+            self.assertFalse(center.metrics_timer.isActive())
+            factory.return_value.sample.return_value = SimpleNamespace(
+                cpu_percent=None, memory_percent=25.0, errors=[])
+            center.setMonitoring(True)
+            self.assertTrue(center.metrics_timer.isActive())
+            self.assertIn("CPU: unavailable", center.metricsStatus)
+            self.assertIn("25.0%", center.metricsStatus)
+            factory.return_value.sample.return_value = SimpleNamespace(
+                cpu_percent=12.5, memory_percent=None, errors=["Memory unavailable"])
+            center.sampleMetrics()
+            self.assertIn("12.5%", center.metricsStatus)
+            self.assertIn("Memory unavailable", center.metricsStatus)
+            center.setMonitoring(False)
+            self.assertFalse(center.metrics_timer.isActive())
+            self.assertIsNone(center.collector)
+            self.assertEqual(center.metricsStatus, "System monitoring is off")
+            self.assertEqual(center.rows, [])
+            center.setMonitoring(True)
+            self.assertEqual(factory.call_count, 2)
+            center.setMonitoring(False)
+
     def test_failed_save_preserves_model(self):
         with tempfile.TemporaryDirectory() as directory:
             center = Controller(Path(directory) / "profiles.json")
@@ -80,6 +107,18 @@ class CenterTests(unittest.TestCase):
             QTest.qWait(100)
             self.assertEqual(center.rows[0]["name"], "UI game")
             self.assertTrue(center.rows[0]["gamemode"])
+            with patch("main.MetricsCollector") as factory:
+                factory.return_value.sample.return_value = SimpleNamespace(
+                    cpu_percent=12.5, memory_percent=25.0, errors=[])
+                switch = window.findChild(QObject, "monitoringSwitch")
+                switch.setProperty("checked", True)
+                switch.toggled.emit()
+                QTest.qWait(20)
+                self.assertTrue(center.monitoringEnabled)
+                self.assertIn("12.5%", window.findChild(QObject, "metricsLabel").property("text"))
+                switch.setProperty("checked", False)
+                switch.toggled.emit()
+                self.assertFalse(center.monitoringEnabled)
             for width, height in [(840, 600), (560, 500)]:
                 window.setWidth(width)
                 window.setHeight(height)

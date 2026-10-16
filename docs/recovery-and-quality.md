@@ -108,7 +108,9 @@ local `liveuser` cleanup, and listening TCP/UDP ports 22 and 10022. Exit codes a
 0 for all checks passing, 1 for any failure, and 2 for incomplete evidence.
 Missing tools, timeouts and unrecognized output require investigation.
 
-Commands are read-only and have time limits. RPM verification uses `--noscripts`
+Commands are read-only and have time limits. Combined command output is capped
+at 1 MiB; overflow and timeout terminate the command and report UNKNOWN without
+using partial results. RPM verification uses `--noscripts`
 to suppress package verification scriptlets; account lookup uses the local files
 database. No privilege escalation or repair is performed. A port check covers
 only the specified ports; it cannot identify SSH on an arbitrary port or establish

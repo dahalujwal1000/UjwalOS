@@ -221,6 +221,10 @@ El Torito boot entry. These checks do not establish a successful boot.
 The second creates `out/vm-XXXXXXXX/`, a 40 GiB sparse QCOW2 disk and private UEFI
 variables, then opens QEMU with 4 GiB RAM. Install only to that virtual disk.
 Without KVM it prints `using -accel tcg` and uses the emulated `max` CPU.
+`UJWALOS_VM_ACCEL=tcg` explicitly selects software emulation when accessible KVM
+fails at runtime; `auto` is the default and `kvm` requires device access.
+Stop the failed VM before retrying. The launcher does not automatically restart
+a VM after an error. Software emulation is slower and is not a gaming benchmark.
 Firmware paths follow this Fedora 44 edk2-ovmf package; missing firmware fails
 explicitly. The initial test uses ordinary UEFI, not Secure Boot certification. GTK needs
 a graphical session; use `--headless` when DISPLAY/Wayland is unavailable.

@@ -5,15 +5,17 @@ from pathlib import Path
 import shutil
 import sys
 
-from PySide6.QtCore import QObject, Property, QLockFile, QStandardPaths, Signal, Slot
+from PySide6.QtCore import QObject, Property, QLockFile, QStandardPaths, QTimer, Signal, Slot
 from PySide6.QtGui import QGuiApplication, QIcon
 from PySide6.QtQml import QQmlApplicationEngine
 
 from profiles import Profile, load_profiles, save_profiles
+from metrics import MetricsCollector
 
 
 class Controller(QObject):
     changed = Signal()
+    metricsChanged = Signal()
 
     def __init__(self, path):
         super().__init__()
@@ -22,6 +24,12 @@ class Controller(QObject):
         self.message = ""
         self.writable = True
         self.tools = ""
+        self.collector = None
+        self.monitoring = False
+        self.metrics_text = "System monitoring is off"
+        self.metrics_timer = QTimer(self)
+        self.metrics_timer.setInterval(2000)
+        self.metrics_timer.timeout.connect(self.sampleMetrics)
         try:
             self.items = load_profiles(self.path)
         except (OSError, ValueError) as error:
@@ -45,6 +53,41 @@ class Controller(QObject):
     @Property(str, notify=changed)
     def toolStatus(self):
         return self.tools
+
+    @Property(bool, notify=metricsChanged)
+    def monitoringEnabled(self):
+        return self.monitoring
+
+    @Property(str, notify=metricsChanged)
+    def metricsStatus(self):
+        return self.metrics_text
+
+    @Slot(bool)
+    def setMonitoring(self, enabled):
+        if enabled == self.monitoring:
+            return
+        self.monitoring = enabled
+        if enabled:
+            self.collector = MetricsCollector()
+            self.sampleMetrics()
+            self.metrics_timer.start()
+        else:
+            self.metrics_timer.stop()
+            self.collector = None
+            self.metrics_text = "System monitoring is off"
+        self.metricsChanged.emit()
+
+    @Slot()
+    def sampleMetrics(self):
+        if not self.monitoring or self.collector is None:
+            return
+        sample = self.collector.sample()
+        cpu = "unavailable" if sample.cpu_percent is None else f"{sample.cpu_percent:.1f}%"
+        memory = "unavailable" if sample.memory_percent is None else f"{sample.memory_percent:.1f}%"
+        self.metrics_text = f"System CPU: {cpu} | Memory used (estimate): {memory}"
+        if sample.errors:
+            self.metrics_text += " — " + "; ".join(sample.errors)
+        self.metricsChanged.emit()
 
     @Slot()
     def refresh(self):

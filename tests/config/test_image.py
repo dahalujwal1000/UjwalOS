@@ -110,6 +110,7 @@ class ImageTests(unittest.TestCase):
             self.assertEqual(subprocess.check_output(["rpm", "-qp", "--scripts", str(apps)], text=True), "")
             app_paths = subprocess.check_output(["rpm", "-qpl", str(apps)], text=True).splitlines()
             for expected in ("/usr/share/ujwalos/gaming-center/main.py",
+                             "/usr/share/ujwalos/gaming-center/metrics.py",
                              "/usr/share/ujwalos/phone-panel/phone_panel.py",
                              "/usr/share/applications/ujwalos-gaming-center.desktop",
                              "/usr/share/applications/ujwalos-phone-panel.desktop"):
@@ -275,6 +276,21 @@ class ImageTests(unittest.TestCase):
             qemu.chmod(0o755)
             capture = root / "args.json"
             env = dict(os.environ, PATH=str(fake_bin) + os.pathsep + os.environ["PATH"], CAPTURE=str(capture))
+            marker = root / "external-called"
+            invalid_bin = root / "invalid-bin"
+            invalid_bin.mkdir()
+            for name in ("python3", "qemu-system-x86_64", "qemu-img", "xorriso"):
+                tool = invalid_bin / name
+                tool.write_text(f'#!/bin/sh\nprintf called >> "{marker}"\n')
+                tool.chmod(0o755)
+            invalid_env = dict(env, PATH=str(invalid_bin) + os.pathsep + env["PATH"],
+                               UJWALOS_VM_ACCEL="invalid")
+            invalid = subprocess.run([str(entry), str(iso), "--headless"], env=invalid_env,
+                                     text=True, capture_output=True)
+            self.assertNotEqual(invalid.returncode, 0)
+            self.assertIn("UJWALOS_VM_ACCEL must be auto, kvm, or tcg", invalid.stderr)
+            self.assertFalse(marker.exists())
+            self.assertFalse((root / "out").exists())
             subprocess.run([str(entry), str(iso), "--headless"], env=env,
                            check=True, stdout=subprocess.DEVNULL)
             args = json.loads(capture.read_text())
@@ -285,6 +301,12 @@ class ImageTests(unittest.TestCase):
             self.assertIn(f"file={iso},media=cdrom,format=raw,readonly=on", args)
             self.assertIn(f"unix:{vm}/vnc.sock", args)
             self.assertIn(f"unix:{vm}/qmp.sock,server=on,wait=off", args)
+            tcg_env = dict(env, UJWALOS_VM_ACCEL="tcg")
+            subprocess.run([str(entry), str(iso), "--headless"], env=tcg_env,
+                           check=True, stdout=subprocess.DEVNULL)
+            tcg_args = json.loads(capture.read_text())
+            self.assertEqual(tcg_args[tcg_args.index("-accel") + 1], "tcg")
+            self.assertEqual(tcg_args[tcg_args.index("-cpu") + 1], "max")
             subprocess.run([str(entry), "--installed", str(vm), "--headless"], env=env,
                            check=True, stdout=subprocess.DEVNULL)
             installed_args = json.loads(capture.read_text())

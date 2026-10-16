@@ -1,7 +1,7 @@
 import importlib.util
 import json
-import os
 import subprocess
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -10,6 +10,7 @@ SOURCE = __import__("pathlib").Path(__file__).resolve().parents[2] / "scripts/te
 SPEC = importlib.util.spec_from_file_location("check_installed_system", SOURCE)
 checker = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(checker)
+real_run = checker._run
 
 
 def completed(argv, stdout="", stderr="", returncode=0):
@@ -20,42 +21,46 @@ class InstalledSystemTests(unittest.TestCase):
     def setUp(self):
         self.responses = {}
 
-        def run(argv, **kwargs):
-            self.assertEqual(kwargs["timeout"], checker.TIMEOUT_SECONDS)
-            self.assertFalse(kwargs.get("shell", False))
-            self.assertEqual(kwargs["env"]["LC_ALL"], "C")
-            self.assertEqual(kwargs["env"]["LANG"], "C")
-            self.assertEqual(kwargs["env"].get("PATH"), os.environ.get("PATH"))
-            self.assertEqual(kwargs["errors"], "replace")
+        def run(argv):
             key = tuple(argv)
             response = self.responses.get(key)
-            if isinstance(response, BaseException):
-                raise response
             if response is None:
                 self.fail(f"Unexpected subprocess: {key!r}")
+            if isinstance(response, subprocess.CompletedProcess):
+                return response, None
+            if isinstance(response, subprocess.TimeoutExpired):
+                return None, "timeout"
+            if isinstance(response, BaseException):
+                return None, str(response)
             return response
 
-        self.run_mock = patch.object(checker.subprocess, "run", side_effect=run)
+        self.run_mock = patch.object(checker, "_run", side_effect=run)
         self.run_mock.start()
         self.addCleanup(self.run_mock.stop)
         self.good_responses()
 
     def good_responses(self):
         self.responses.update({
-            ("findmnt", "-n", "-o", "SOURCE", "/"): completed(
-                ("findmnt",), "/dev/vda3[/root]\n"),
-            ("getenforce",): completed(("getenforce",), "Enforcing\n"),
+            ("findmnt", "-n", "-o", "SOURCE", "/"): (completed(
+                ("findmnt",), "/dev/vda3[/root]\n"), None),
+            ("getenforce",): (completed(("getenforce",), "Enforcing\n"), None),
             ("systemctl", "is-active", "firewalld"): completed(
                 ("systemctl",), "active\n"),
             ("getent", "-s", "files", "passwd", "liveuser"): completed(
                 ("getent",), "", returncode=2),
             ("ss", "-H", "-l", "-n", "-t", "-u"): completed(("ss",)),
         })
+        self.responses[("systemctl", "is-active", "firewalld")] = (
+            self.responses[("systemctl", "is-active", "firewalld")], None)
+        self.responses[("getent", "-s", "files", "passwd", "liveuser")] = (
+            self.responses[("getent", "-s", "files", "passwd", "liveuser")], None)
+        self.responses[("ss", "-H", "-l", "-n", "-t", "-u")] = (
+            self.responses[("ss", "-H", "-l", "-n", "-t", "-u")], None)
         for package in checker.PACKAGES:
-            self.responses[("rpm", "-q", package)] = completed(
-                ("rpm",), f"{package}-1.0-1.fc44.noarch\n")
-            self.responses[("rpm", "-V", "--noscripts", package)] = completed(
-                ("rpm",))
+            self.responses[("rpm", "-q", package)] = (completed(
+                ("rpm",), f"{package}-1.0-1.fc44.noarch\n"), None)
+            self.responses[("rpm", "-V", "--noscripts", package)] = (completed(
+                ("rpm",)), None)
 
     def test_all_pass(self):
         report = checker.run_checks()
@@ -74,9 +79,37 @@ class InstalledSystemTests(unittest.TestCase):
             ("rpm",), stderr="warning: cannot establish file state")
         self.assertEqual(checker._package_check(package)["status"], "UNKNOWN")
 
+    def test_rpm_query_operational_error_is_unknown_but_confirmed_absence_fails(self):
+        package = checker.PACKAGES[0]
+        command = ("rpm", "-q", package)
+        self.responses[command] = completed(
+            ("rpm",), stderr="error: rpm database is locked", returncode=1)
+        item = checker._package_check(package)
+        self.assertEqual(item["status"], "UNKNOWN")
+        self.assertEqual(item["evidence"]["reason"], "query-failed")
+        self.responses[command] = completed(
+            ("rpm",), stderr=f"package {package} is not installed", returncode=1)
+        item = checker._package_check(package)
+        self.assertEqual(item["status"], "FAIL")
+        self.assertFalse(item["evidence"]["installed"])
+        self.responses[command] = completed(
+            ("rpm",), stdout=f"package {package} is not installed\n", returncode=1)
+        self.assertEqual(checker._package_check(package)["status"], "FAIL")
+
+    def test_real_helper_output_limit_kills_and_returns_no_partial_result(self):
+        code = "import os; os.write(1, b'x' * 700000); os.write(2, b'y' * 700000)"
+        result, error = real_run((sys.executable, "-c", code))
+        self.assertIsNone(result)
+        self.assertEqual(error, "output-limit")
+
+    def test_real_helper_timeout_kills_and_returns_no_partial_result(self):
+        with patch.object(checker, "TIMEOUT_SECONDS", 0.1):
+            result, error = real_run((sys.executable, "-c", "import time; time.sleep(30)"))
+        self.assertIsNone(result)
+        self.assertEqual(error, "timeout")
     def test_missing_opt_in_runs_no_subprocess(self):
         self.run_mock.stop()
-        with patch.object(checker.subprocess, "run") as run:
+        with patch.object(checker, "_run") as run:
             from contextlib import redirect_stdout
             from io import StringIO
             output = StringIO()

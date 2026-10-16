@@ -4,11 +4,14 @@
 import argparse
 import json
 import os
+import selectors
 import subprocess
 import sys
+import time
 
 
 TIMEOUT_SECONDS = 5
+MAX_OUTPUT_BYTES = 1024 * 1024
 OUTPUT_LIMIT = 512
 PACKAGES = ("ujwalos-apps", "ujwalos-branding", "ujwalos-gaming-setup")
 FORBIDDEN_PORTS = {22, 10022}
@@ -20,17 +23,63 @@ def _brief(value):
 
 
 def _run(argv):
+    process = None
+    selector = selectors.DefaultSelector()
+    streams = {"stdout": bytearray(), "stderr": bytearray()}
     try:
-        result = subprocess.run(
-            list(argv), capture_output=True, text=True, errors="replace",
-            timeout=TIMEOUT_SECONDS, check=False,
+        process = subprocess.Popen(
+            list(argv), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             env={**os.environ, "LC_ALL": "C", "LANG": "C"},
         )
-        return result, None
-    except subprocess.TimeoutExpired:
-        return None, "timeout"
+        for name, stream in (("stdout", process.stdout), ("stderr", process.stderr)):
+            os.set_blocking(stream.fileno(), False)
+            selector.register(stream, selectors.EVENT_READ, name)
+        deadline = time.monotonic() + TIMEOUT_SECONDS
+        while selector.get_map() or process.poll() is None:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                process.kill()
+                process.wait()
+                return None, "timeout"
+            if not selector.get_map():
+                try:
+                    process.wait(timeout=remaining)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+                    return None, "timeout"
+                break
+            for key, _ in selector.select(remaining):
+                try:
+                    chunk = os.read(key.fileobj.fileno(), 65536)
+                except BlockingIOError:
+                    continue
+                if not chunk:
+                    selector.unregister(key.fileobj)
+                    key.fileobj.close()
+                    continue
+                combined = sum(map(len, streams.values())) + len(chunk)
+                if combined > MAX_OUTPUT_BYTES:
+                    process.kill()
+                    process.wait()
+                    return None, "output-limit"
+                streams[key.data].extend(chunk)
+        return subprocess.CompletedProcess(
+            list(argv), process.wait(),
+            bytes(streams["stdout"]).decode("utf-8", "replace"),
+            bytes(streams["stderr"]).decode("utf-8", "replace"),
+        ), None
     except (OSError, subprocess.SubprocessError) as exc:
+        if process is not None and process.poll() is None:
+            process.kill()
+            process.wait()
         return None, _brief(str(exc)) or type(exc).__name__
+    finally:
+        selector.close()
+        if process is not None:
+            for stream in (process.stdout, process.stderr):
+                if stream is not None and not stream.closed:
+                    stream.close()
 
 
 def _check(check_id, status, evidence):
@@ -100,8 +149,19 @@ def _package_check(package):
     if query is None:
         return _check(f"package:{package}", "UNKNOWN", {"reason": error})
     if query.returncode != 0:
-        return _check(f"package:{package}", "FAIL", {
-            "installed": False,
+        absent_message = f"package {package} is not installed"
+        absent = (
+            query.returncode == 1
+            and (query.stdout.strip(), query.stderr.strip()) in {
+                (absent_message, ""), ("", absent_message),
+            }
+        )
+        if absent:
+            return _check(f"package:{package}", "FAIL", {
+                "installed": False, "reason": "package is not installed",
+            })
+        return _check(f"package:{package}", "UNKNOWN", {
+            "reason": "query-failed",
             "exit_code": query.returncode,
         })
     version = _brief(query.stdout)

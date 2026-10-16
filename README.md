@@ -27,8 +27,10 @@ the VM sequence described above. See the
 [acceptance summary](docs/status.md#current-acceptance-summary) for completed work,
 pending implementation and remaining testing.
 
-The subsequent guest-checker tooling milestone passed 64 configuration tests,
-including 16 new checker tests; its guest execution remains pending.
+The subsequent guest checker passed all eight baseline checks inside a restored
+file-backed VM. New source adds bounded command capture, explicit VM accelerator
+selection and opt-in CPU/memory monitoring; see the latest status entry for
+test results and package-versus-ISO scope.
 
 | Stage | Description | Status |
 |-------|-------------|--------|
@@ -105,8 +107,9 @@ and a Qt/QML per-game profile editor: validated settings, private atomic saves,
 fixed launch-option previews, local reset and read-only tool availability.
 The latest combined automated results are recorded above; earlier Qt smoke tests
 also passed at 200% scale. These do not establish full accessibility acceptance.
-Runtime monitoring, authorized system integration and crash/reboot restoration
-are not implemented yet. The editor is now packaged in `ujwalos-apps` 0.1-4
+Opt-in aggregate CPU/memory monitoring is implemented in newer source;
+authorized system integration and crash/reboot restoration are not implemented.
+The earlier editor is packaged in `ujwalos-apps` 0.1-4
 and included in the newest built ISO above; it launched successfully in that
 ISO's live session on 2026-10-16.
 Stage 3 hardware/game gates stay open.
@@ -140,7 +143,10 @@ A read-only installed-guest baseline checker is available at
 SELinux, firewall, package-integrity, local live-account and listener checks as
 JSON. See the [guest-check protocol](docs/recovery-and-quality.md#installed-guest-baseline-checker)
 for execution context, exit codes and limits. This tool is not included in the
-previously built ISO; its automated tests do not establish a new guest test.
+previously built ISO; a copy was supplied on read-only auxiliary media and
+passed inside the restored installed guest. A small offline codec update and
+pre-transaction network-failure test passed; kernel/rescue and interrupted-update
+recovery acceptance remain open.
 
 ## Project documents
 

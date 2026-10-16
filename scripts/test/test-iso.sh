@@ -8,9 +8,16 @@ usage() {
     echo '       test-iso.sh --installed out/vm-XXXXXXXX [--headless]'
     echo 'Headless uses a local Unix VNC socket; see docs/build-and-test.md.'
     echo 'UJWALOS_VM_MEMORY_MIB overrides the 4096 MiB default (2048-8192).'
+    echo 'UJWALOS_VM_ACCEL selects auto (default), kvm, or explicit software emulation tcg.'
 }
 [[ $# -ge 1 ]] || { usage; exit 1; }
 [[ $1 != --help ]] || { usage; exit 0; }
+vm_accel=${UJWALOS_VM_ACCEL:-auto}
+[[ $vm_accel == auto || $vm_accel == kvm || $vm_accel == tcg ]] || \
+    die "UJWALOS_VM_ACCEL must be auto, kvm, or tcg"
+if [[ $vm_accel == kvm && ( ! -r /dev/kvm || ! -w /dev/kvm ) ]]; then
+    die "UJWALOS_VM_ACCEL=kvm requires readable and writable /dev/kvm"
+fi
 [[ $EUID -ne 0 ]] || die "Run QEMU as a normal user"
 memory_mib=${UJWALOS_VM_MEMORY_MIB:-4096}
 [[ $memory_mib =~ ^[0-9]+$ ]] && ((memory_mib >= 2048 && memory_mib <= 8192)) || \
@@ -68,7 +75,10 @@ fi
 firmware=/usr/share/edk2/ovmf/OVMF_CODE.fd
 [[ -f $firmware ]] || die "Missing edk2-ovmf firmware: $firmware"
 accel=(-accel kvm -cpu host)
-if [[ ! -r /dev/kvm || ! -w /dev/kvm ]]; then
+if [[ $vm_accel == tcg ]]; then
+    echo 'Using explicitly selected software emulation (-accel tcg); VM operations will be slower.'
+    accel=(-accel tcg -cpu max)
+elif [[ $vm_accel == auto && ( ! -r /dev/kvm || ! -w /dev/kvm ) ]]; then
     echo 'KVM unavailable: using -accel tcg; live boot and installation will be slower.'
     accel=(-accel tcg -cpu max)
 fi

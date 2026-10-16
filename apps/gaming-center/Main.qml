@@ -50,6 +50,18 @@ ApplicationWindow {
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
             }
+            Switch {
+                objectName: "monitoringSwitch"
+                text: "Monitor system CPU and memory"
+                checked: center.monitoringEnabled
+                onToggled: center.setMonitoring(checked)
+            }
+            Label {
+                objectName: "metricsLabel"
+                text: center.metricsStatus
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
             Label {
                 text: center.error
                 visible: text.length > 0
@@ -111,7 +123,11 @@ ApplicationWindow {
                     + (overlay.checked ? "mangohud " : "") + "%command%"
                 Accessible.name: "Launch options preview"
             }
-            Label { text: "Applied state: not monitored" }
+            Label {
+                text: "Profile applied state: not monitored. System usage is not per-game activity."
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
             RowLayout {
                 Button {
                     objectName: "saveButton"

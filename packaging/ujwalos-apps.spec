@@ -1,6 +1,6 @@
 Name:           ujwalos-apps
 Version:        0.1
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        UjwalOS development Gaming Center and Phone Panel
 License:        LicenseRef-UjwalOS-Internal
 BuildArch:      noarch
@@ -12,7 +12,8 @@ Requires:       kde-connect
 %description
 Unprivileged Qt/QML gaming profile editor and KDE Connect status panel with
 confirmed unpair requests and a KDE Connect launcher. These previews do not apply
-performance settings. No autostart service or privileged helper is installed.
+performance settings. Optional read-only system CPU and memory monitoring is
+available. No autostart service or privileged helper is installed.
 
 %prep
 
@@ -22,7 +23,7 @@ performance settings. No autostart service or privileged helper is installed.
 mkdir -p %{buildroot}/usr/share/ujwalos/gaming-center
 mkdir -p %{buildroot}/usr/share/ujwalos/phone-panel
 mkdir -p %{buildroot}/usr/share/applications
-install -m 0644 %{_sourcedir}/apps/gaming-center/{main.py,profiles.py,Main.qml} %{buildroot}/usr/share/ujwalos/gaming-center/
+install -m 0644 %{_sourcedir}/apps/gaming-center/{main.py,profiles.py,metrics.py,Main.qml} %{buildroot}/usr/share/ujwalos/gaming-center/
 install -m 0644 %{_sourcedir}/apps/phone-panel/{phone_panel.py,backend.py,Main.qml} %{buildroot}/usr/share/ujwalos/phone-panel/
 install -m 0644 %{_sourcedir}/packaging/desktop/*.desktop %{buildroot}/usr/share/applications/
 

@@ -1,5 +1,122 @@
 # Status and unreleased notes
 
+## 2026-10-16 - Monitoring and recovery work in progress
+
+New source adds opt-in, read-only aggregate CPU/memory monitoring to Gaming
+Center (off by default, two-second samples, no telemetry storage or privileged
+changes). Apps RPM release advances to 0.1-5; the existing ISO remains 0.1-4.
+A lower-cost agent handles the bounded metrics parser/tests; parent integration
+handles Qt controls, packaging, review and isolated VM testing.
+
+The guest checker now caps combined command output at 1 MiB, kills/reaps timed
+out or overflowing commands and reports UNKNOWN. RPM query failures are no
+longer confused with an explicitly absent package. The VM launcher now supports
+`UJWALOS_VM_ACCEL=auto|kvm|tcg`, including explicit TCG for hosts where accessible
+KVM fails at runtime. Neither change modifies host virtualization settings.
+
+Checks run (guest update follow-up still in progress):
+
+- `python3 -m unittest discover -s tests/config -q`: final run 75 passed,
+  including individual CPU counter decreases and oversized numeric values.
+- `QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software UJWALOS_UI_SCREENSHOTS=out/metrics-ui out/stage4-venv/bin/python -m unittest discover -s tests/ui -q`:
+  14 passed; screenshot at 560x500 inspected, scrollable form rendered.
+- Same Qt command with `QT_SCALE_FACTOR=2`: 14 passed.
+- `dbus-run-session -- out/stage4-venv/bin/python tests/integration/test_phone_transport.py -q`:
+  two passed.
+- A first UI attempt with system Python failed because PySide6 is absent;
+  reruns above use the existing repository-local environment, no host install.
+- `bash scripts/build/build-apps-rpm.sh out/apps-metrics-Ui5ngRd0`: built
+  `apps-rpmbuild/RPMS/noarch/ujwalos-apps-0.1-5.fc44.noarch.rpm`.
+  Direct script execution first returned permission denied (tracked mode 0644);
+  explicit Bash succeeded. RPM warned about missing changelog/source epoch.
+  This preliminary RPM precedes final parser review and is not an ISO build.
+- Final reviewed rebuild: `bash scripts/build/build-apps-rpm.sh
+  out/apps-final-NrizDYKE` exited 0. RPM at
+  `out/apps-final-NrizDYKE/apps-rpmbuild/RPMS/noarch/ujwalos-apps-0.1-5.fc44.noarch.rpm`,
+  SHA-256 `4e23432c885cad195a4a51a30d8c082220c3741a2ad7ad477ff69f286536d412`.
+  `rpm -qpl` confirms metrics.py; image-generation tests also assert its presence.
+  UI tests additionally exercise the QML monitoring switch and status binding.
+  `bash -n scripts/test/test-iso.sh scripts/build/build-apps-rpm.sh` and
+  `git diff --check` passed. Guest installation evidence follows below.
+
+Recovery evidence: while the original VM was stopped, its disk and UEFI variables
+were copied to `out/recovery-baseline-e8nyY0u4`, then restored to
+`out/vm-recovery-QgQ9GZNd` using `cp --reflink=auto --sparse=always` for each disk
+and `cp` for `OVMF_VARS.fd`. `qemu-img compare -f qcow2 -F qcow2
+out/recovery-baseline-e8nyY0u4/disk.qcow2 out/vm-recovery-QgQ9GZNd/disk.qcow2`
+reported identical images; `cmp` on both variables files exited 0.
+Cold backup SHA-256: disk
+`7017f94d8e2202fd0321bf459dca9f94c256f8fd0a67e9f40c22dd85e753fa69`, variables
+`50e35c6b79b6f4145a8d1c733881f8fa351f38e787d4e690894cb891ccb0c045`.
+
+The restored copy failed KVM entry with hardware error 0x0; software-emulated
+TCG boot reached an authenticated installed-system TTY. Graphical acceptance
+of this restored TCG session is not yet established. Auxiliary read-only media
+`out/guest-tools-ieixL7rS.iso` supplied the checker snapshot from commit 16134f8
+(before current output-cap changes), not an OS boot image. In the guest,
+`sudo mount -o ro /dev/sr0 /mnt` then
+`python3 /mnt/check-installed-system.py --guest-check | tee baseline.json`
+reported all eight checks PASS, including apps 0.1-4 integrity. Report exported
+through guest serial with `sudo tee /dev/ttyS0 < baseline.json`; retained in
+`out/vm-recovery-QgQ9GZNd/serial.log`. No SSH/host forwarding was introduced.
+
+Guest DNF5 5.4.6.0: `sudo dnf5 upgrade --refresh --offline --assumeno`
+previewed a two-package OpenH264 transaction replacing noopenh264. Then
+`sudo dnf5 upgrade --offline -y` staged it successfully and
+`sudo dnf5 offline status` confirmed pending work. `sudo dnf5 offline reboot`
+was confirmed; the VM rebooted and accepted TTY login. `dnf5 history info last`
+reported transaction 3, `Status: Ok`, with the expected two installs and one
+replacement. `dnf5 offline status` reported no stored transaction; `rpm -q
+openh264 mozilla-openh264 noopenh264` confirmed the expected state. However,
+`sudo dnf5 offline log --number=-1` returned `Cannot find logs with this index`;
+the history/package evidence, not that log command, establishes completion.
+The original checker again returned all eight PASS after the reboot. This is
+a small codec transaction, not kernel-update or general rollback acceptance.
+The original VM and cold backup remain untouched. No new ISO, physical hardware
+test, signing approval or public-release clearance is claimed.
+
+The reviewed checker and apps RPM were copied onto auxiliary data media
+`out/guest-final-tools-b0o6IoE1.iso` using `xorriso -as mkisofs -R -J
+-V UJWAL_TEST_TOOLS -o out/guest-final-tools-b0o6IoE1.iso
+out/guest-final-tools-b0o6IoE1`. QMP `query-block` identified the empty second
+CD drive; `blockdev-change-medium` attached that media read-only using its QOM
+device path. Inside the guest, `sudo mount -o ro /dev/sr1 /media` and
+`python3 /media/check-installed-system.py --guest-check` returned all eight PASS.
+`sudo rpm -Uvh /media/ujwalos-apps-0.1-5.fc44.noarch.rpm` then upgraded the app
+package successfully (existing explicit unsigned-local-engineering exception,
+not a signed update acceptance). The checker subsequently reported clean
+0.1-5 integrity with all eight PASS.
+
+As the ordinary guest user, Python imported `MetricsCollector` from the installed
+`/usr/share/ujwalos/gaming-center`, sampled, slept two seconds and sampled again.
+First CPU was unavailable as designed; second CPU was 51.74%, memory estimate
+16.05%, with no errors. These transient VM values are functional evidence only,
+not a performance benchmark or graphical application acceptance.
+
+Failed-staging test inside that disposable guest:
+
+```sh
+sudo dnf5 --setopt=proxy=http://127.0.0.1:9 --setopt=timeout=3 --setopt=retries=1 --setopt='*.skip_if_unavailable=False' upgrade --refresh --offline -y 2>&1 | sudo tee /dev/ttyS0
+printf 'DNF_EXIT=%s\n' "${PIPESTATUS[0]}" | sudo tee /dev/ttyS0
+sudo dnf5 offline status
+python3 /media/check-installed-system.py --guest-check
+```
+
+The deliberately unreachable per-command proxy caused metadata connection errors,
+`DNF_EXIT=1`, no stored offline transaction, and all eight baseline checks PASS.
+No persistent repository/proxy/security settings were changed. This covers
+pre-transaction network failure only; interrupted RPM installation, kernel
+fallback, full rescue and post-failure reboot acceptance remain separate gates.
+
+Upstream references checked 2026-10-16:
+[DNF5 offline](https://dnf5.readthedocs.io/en/latest/commands/offline.8.html),
+[DNF5 upgrade](https://dnf5.readthedocs.io/en/latest/commands/upgrade.8.html),
+[QEMU image tools](https://www.qemu.org/docs/master/tools/qemu-img.html),
+[Linux procfs](https://www.kernel.org/doc/html/latest/filesystems/proc.html),
+[Qt timers](https://doc.qt.io/qtforpython-6/PySide6/QtCore/QTimer.html).
+Also verified: [QMP removable media](https://www.qemu.org/docs/master/interop/qemu-qmp-ref.html#command-blockdev-change-medium)
+and [DNF5 configuration](https://dnf5.readthedocs.io/en/latest/dnf5.conf.5.html).
+
 ## 2026-10-16 - Installed guest baseline checker
 
 Implemented `scripts/test/check-installed-system.py` with an explicit
