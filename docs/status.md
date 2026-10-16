@@ -28,8 +28,17 @@ Independent lower-cost read-only review found no concrete monitoring bugs;
 eight metrics and six Gaming Center UI tests passed. Parent reran
 `python3 -m unittest discover -s tests/config -q`: 75 passed.
 `scripts/build/build-iso.sh --validate` passed in `out/build-9K9HoH5I`.
-An isolated `scripts/build/build-iso.sh` run was then started; no new ISO
-success or VM acceptance is inferred until its result is recorded.
+An isolated `scripts/build/build-iso.sh` run was then started in
+`out/build-Bjm4T3wR` using image-affecting source from commit
+`13a3d1c527073c71478e25621c2921c5f94d8e3a` (concurrent changes were docs only).
+All three pinned builder hashes and network preflight passed; the guest is
+downloading bootstrap packages. Downloads are slow; do not launch a duplicate
+build or edit the running wrapper. No new ISO success or VM acceptance is
+inferred until its result is recorded. Follow `out/build-Bjm4T3wR/build.log`;
+after the process ends, require wrapper `exit-code` 0, guest `result/result.code`
+0, a nonempty ISO and passing `test-iso.sh --check-only`. An in-progress
+`result.code` value is not a terminal build result. Then run new-image live and
+fresh-install checks; the updated older VM's results do not transfer to it.
 Build command options rechecked 2026-10-16 against
 [KIWI boxbuild](https://osinside.github.io/kiwi/commands/system_boxbuild.html).
 
